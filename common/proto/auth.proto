@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package auth;
+
+service AuthService {
+  rpc Login (LoginRequest) returns (AuthResponse);
+  rpc Logout (LogoutRequest) returns (StatusResponse);
+  rpc ValidateToken (ValidateRequest) returns (ValidateResponse);
+  rpc GetUserInfo (UserRequest) returns (UserResponse);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message AuthResponse {
+  bool success = 1;
+  string token = 2;        // JWT
+  string user_id = 3;
+  string role = 4;         // "student" | "faculty" | "admin"
+  string message = 5;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message ValidateRequest {
+  string token = 1;
+}
+
+message ValidateResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message StatusResponse {
+  bool success = 1;
+  string message = 2;
+}

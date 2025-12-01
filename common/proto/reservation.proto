@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package reservation;
+
+service ReservationService {
+  rpc CreateReservation (CreateReservationRequest) returns (ReservationResponse);
+  rpc GetMyReservation (UserRequest) returns (ReservationResponse);
+  rpc ListReservations (FilterRequest) returns (ReservationList);
+}
+
+message CreateReservationRequest {
+  string user_id = 1;
+  string parking_id = 2;
+  string plate_number = 3;
+  string vehicle_type = 4;   // "car" | "motor"
+  string date = 5;           // "2025-12-01"
+  string start_time = 6;     // "08:00"
+  string end_time = 7;       // "09:00"
+}
+
+message Reservation {
+  string id = 1;
+  string user_id = 2;
+  string parking_id = 3;
+  string vehicle_plate  = 4;
+  string vehicle_type = 5;
+  string date = 6;
+  string start_time = 7;
+  string end_time = 8;
+  string status = 9; // "Active" | "Canceled" | "Completed"
+}
+
+message ReservationResponse {
+  bool success = 1;
+  string message = 2;
+  Reservation reservation = 3;
+}
+
+message ReservationList {
+  repeated Reservation reservations = 1;
+}
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message FilterRequest {
+  string date = 1;        // filter by date
+  string vehicle_type = 2;
+  string floor = 3;
+}

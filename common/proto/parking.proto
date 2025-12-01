@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package parking;
+
+service ParkingService {
+  rpc GetParkingSlots (ParkingRequest) returns (ParkingResponse);
+  rpc UpdateSlotStatus (SlotUpdate) returns (StatusResponse);
+}
+
+message ParkingRequest {
+  string type = 1;
+  string floor = 2;
+}
+
+message ParkingResponse {
+  repeated ParkingSlot slots = 1;
+}
+
+message ParkingSlot {
+  string id = 1;
+  string slot_number = 2;
+  string floor = 3;
+  string type = 4;
+  string status = 5;
+}
+
+message SlotUpdate {
+  string slotId = 1;
+  string status = 2;
+}
+
+message StatusResponse {
+  bool success = 1;
+  string message = 2;
+}

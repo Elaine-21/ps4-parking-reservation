@@ -1,0 +1,97 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: parking
+      POSTGRES_DB: parkingdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  # gRPC auth microservice (you'll create ./auth-service folder for this)
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "50051:50051"  # gRPC port
+      - "3001:3001" # REST port
+    environment:
+      JWT_SECRET: your-super-secret-jwt-key-2024
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - db
+      - redis
+
+  # gRPC parking microservice
+  # even if the folder is called view-parking-service,
+  # the *service name* here must be "parking-service"
+  # to match parking-service:50052 in grpc-client.js
+  parking-service:
+    build: ./view-parking-service
+    ports:
+      - "50052:50052"  # gRPC port
+      - "3002:3002"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
+
+  # reservation-related microservice (create / complete reservations)
+  reservation-service:
+    build: ./reserve-parking-service
+    ports:
+      - "50053:50053"  # gRPC port
+      - "3003:3003"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
+
+  # reservation viewing microservice (list/history)
+  reservations-view-service:
+    build: ./view-reservations-service
+    ports:
+      - "50054:50054"  # gRPC port
+      - "3004:3004"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
+
+  # violations microservice
+  violation-service:
+    build: ./upload-violations-service
+    ports:
+      - "50055:50055"  # gRPC port
+      - "3005:3005"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
+
+  # main web frontend (MVC / Express) that calls all gRPC services
+  viewservice:
+    build: ./viewservice
+    ports:
+      - "3000:3000"
+    environment:
+      AUTH_SERVICE_URL: auth-service:50051
+      PARKING_SERVICE_URL: parking-service:50052
+    depends_on:
+      - auth-service
+      - parking-service
+      - reservation-service
+      - reservations-view-service
+      - violation-service
+
+volumes:
+  postgres_data:

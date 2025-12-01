@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package violation;
+
+service ViolationService {
+  rpc UploadViolation (ViolationRequest) returns (UploadResponse);
+  rpc ListViolations (UserRequest) returns (ViolationList);
+}
+
+message ViolationRequest {
+  string staff_id = 1;
+  string patron_id = 2;
+  string plate_number = 3;
+  string type = 4;      // "idling" | "speeding" | "honking" | ...
+  double amount = 5;
+  string location = 6;
+  string date = 7;      // "2025-12-01"
+  string time = 8;      // "13:45"
+}
+
+message Violation {
+  string id = 1;
+  string staff_id = 2;
+  string patron_id = 3;
+  string plate_number = 4;
+  string violation_type = 5;
+  double amount = 6;
+  string location = 7;
+  string date = 8;
+  string time = 9;
+}
+
+message UploadResponse {
+  bool success = 1;
+  string message = 2;
+  Violation violation = 3;
+}
+
+message ViolationList {
+  repeated Violation violations = 1;
+}
+
+message UserRequest {
+  string user_id = 1;
+}
