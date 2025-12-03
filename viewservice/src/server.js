@@ -1,146 +1,110 @@
 const express = require('express');
 const path = require('path');
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+
+// Reuse your shared gRPC client
+// const grpcClient = require('../common/grpc-client');
+const grpcClient = require('../common/grpc-client');  
 
 const app = express();
-app.use(express.json());
-app.use(express.static('public'));
+const PORT = process.env.PORT || 3000;
 
-// Load proto for REST proxy
-const PROTO_PATH = path.join(__dirname, '../common/proto/auth.proto');
-const packageDef = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true
-});
+// static files (css/js/images)
+app.use('/static', express.static(path.join(__dirname, '../static')));
 
-const authProto = grpc.loadPackageDefinition(packageDef).auth;
+// parse form data and cookies
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Create gRPC client for REST proxy
-const authClient = new authProto.AuthService(
-  process.env.AUTH_SERVICE_URL || 'auth-service:50051',
-  grpc.credentials.createInsecure()
-);
+// helper: auth middleware
+async function requireAuth(req, res, next) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.redirect('/login');
+  }
 
-// Helper function for gRPC calls
-function grpcCall(method, request) {
-  return new Promise((resolve, reject) => {
-    authClient[method](request, (error, response) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(response);
-      }
-    });
-  });
+  try {
+    const result = await grpcClient.validateToken(token);
+    if (!result.valid) {
+      return res.redirect('/login');
+    }
+
+    // attach user info for later use
+    req.user = {
+      id: result.user_id,
+      role: result.role
+    };
+
+    next();
+  } catch (err) {
+    console.error('ValidateToken error:', err);
+    return res.redirect('/login');
+  }
 }
 
-// REST endpoints that proxy to gRPC
+// routes
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy',
-    service: 'auth-rest-proxy',
-    timestamp: new Date().toISOString()
-  });
-});
+// home: redirect to login or dashboard
+app.get('/', async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.redirect('/login');
+  }
 
-// Login endpoint
-app.post('/api/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    console.log(`🔐 REST Login request for: ${username}`);
-    
-    const response = await grpcCall('Login', { username, password });
-    res.json(response);
-  } catch (error) {
-    console.error('Login proxy error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Authentication service unavailable'
-    });
+    const result = await grpcClient.validateToken(token);
+    if (result.valid) {
+      return res.redirect('/dashboard');
+    }
+    return res.redirect('/login');
+  } catch {
+    return res.redirect('/login');
   }
 });
 
-// Validate token endpoint
-app.post('/api/validate', async (req, res) => {
+// GET login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../html', 'login.html'));
+});
+
+// POST login -> call gRPC AuthService.Login
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    const { token } = req.body;
-    console.log('🔍 REST Validate token request');
-    
-    const response = await grpcCall('ValidateToken', { token });
-    res.json(response);
-  } catch (error) {
-    console.error('Validate token proxy error:', error);
-    res.status(500).json({
-      valid: false,
-      message: 'Token validation service unavailable'
+    const resp = await grpcClient.login(username, password);
+
+    if (!resp.success) {
+      console.log('Login failed:', resp.message);
+      return res.redirect('/login');
+    }
+
+    res.cookie('token', resp.token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000
     });
+
+    res.redirect('/dashboard');
+  } catch (err) {
+    console.error('Login error:', err);
+    res.redirect('/login');
   }
 });
 
-// Logout endpoint
-app.post('/api/logout', async (req, res) => {
-  try {
-    const { token } = req.body;
-    console.log('👋 REST Logout request');
-    
-    const response = await grpcCall('Logout', { token });
-    res.json(response);
-  } catch (error) {
-    console.error('Logout proxy error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Logout service unavailable'
-    });
-  }
+
+// dashboard: protected route
+app.get('/dashboard', requireAuth, (req, res) => {
+  // later you can render dynamic HTML; for now just send a static file
+  res.sendFile(path.join(__dirname, '../html', 'dashboard.html'));
 });
 
-// Get user info
-app.get('/api/user/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log(`📋 REST Get user info for ID: ${id}`);
-    
-    const response = await grpcCall('GetUserInfo', { user_id: id });
-    res.json(response);
-  } catch (error) {
-    console.error('Get user info proxy error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'User service unavailable'
-    });
-  }
+// logout
+app.get('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.redirect('/login');
 });
 
-// List users
-app.get('/api/users', async (req, res) => {
-  try {
-    console.log('📊 REST List users request');
-    
-    const response = await grpcCall('ListUsers', {});
-    res.json(response);
-  } catch (error) {
-    console.error('List users proxy error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'User service unavailable'
-    });
-  }
-});
-
-// Serve frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Viewservice REST proxy running on port ${PORT}`);
-  console.log(`📡 Proxying to auth service at: ${process.env.AUTH_SERVICE_URL || 'auth-service:50051'}`);
-  console.log(`🌐 Frontend available at: http://localhost:${PORT}`);
+  console.log(`Viewservice listening on 0.0.0.0:${PORT}`);
 });

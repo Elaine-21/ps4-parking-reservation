@@ -1,0 +1,55 @@
+<!-- views/view-parking.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    /* small inline styles for clarity; move to css file if you like */
+    .floor { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 6px; }
+    .slot { display: inline-block; width: 120px; padding: 8px; margin: 6px; text-align: center; border-radius: 4px; }
+    .slot.available { background: #e6ffed; }
+    .slot.occupied  { background: #ffe6e6; }
+    .slot.reserved  { background: #fff4cc; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Parking Slots</h1>
+    <p><a href="/dashboard">← Back to Dashboard</a></p>
+  </header>
+
+  <main>
+    <% if (!parkingSlots || parkingSlots.length === 0) { %>
+      <p>No parking slots found.</p>
+    <% } else { %>
+      <% Object.keys(groupedByFloor).sort((a,b) => Number(a) - Number(b)).forEach(function(floorKey) { %>
+        <section class="floor">
+          <h2>Floor <%= floorKey %></h2>
+
+          <div class="slots">
+            <% groupedByFloor[floorKey].forEach(function(slot) { %>
+              <% 
+                // determine class from slot.status (normalize to lowercase)
+                const status = (slot.status || '').toLowerCase();
+                const statusClass = status === 'available' ? 'available' : (status === 'occupied' ? 'occupied' : 'reserved');
+              %>
+              <div class="slot <%= statusClass %>">
+                <div><strong><%= slot.number || slot.id %></strong></div>
+                <div style="font-size:0.9em"><%= slot.type ? slot.type : '' %></div>
+                <div style="font-size:0.85em; margin-top:6px;"><%= slot.status || 'unknown' %></div>
+
+                <!-- optional action button per slot -->
+                <!-- <form method="POST" action="/reserve/<%= slot.id %>">
+                  <button type="submit">Reserve</button>
+                </form> -->
+              </div>
+            <% }); %>
+          </div>
+        </section>
+      <% }); %>
+    <% } %>
+  </main>
+</body>
+</html>

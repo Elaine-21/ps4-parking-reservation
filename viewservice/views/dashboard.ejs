@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Parking Reservation Dashboard</h1>
+
+    <% if (user) { %>
+      <p>Welcome, <strong><%= user.fullName %></strong> (<%= user.role %>)</p>
+      <p>User ID: <%= user.id %></p>
+    <% } %>
+
+    <p><a href="/logout">Logout</a></p>
+  </header>
+
+  <% if (error) { %>
+    <div class="alert alert-error"><%= error %></div>
+  <% } %>
+
+  <section>
+    <h2>Today</h2>
+    <p>Date: <%= currentDate %></p>
+    <p>Time: <%= currentTime %></p>
+  </section>
+
+  <section>
+    <h2>My Current Reservation</h2>
+    <p>(Later you can show reservations for user ID <%= user.id %> here.)</p>
+  </section>
+
+  <section>
+    <a href="/view-parking" class="btn">View Parking Slots</a>
+    
+  </section>
+</body>
+</html>

@@ -3,108 +3,64 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
-// Reuse your shared gRPC client
-// const grpcClient = require('../common/grpc-client');
-const grpcClient = require('../common/grpc-client');  
+// Import controllers
+const authController = require('./controllers/authController');
+const dashboardController = require('./controllers/dashboardController');
+const viewParkingController = require('./controllers/viewParkingController');
+
+// Import middleware
+const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// static files (css/js/images)
+// Configure EJS as template engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+
+// Static files
 app.use('/static', express.static(path.join(__dirname, '../static')));
 
-// parse form data and cookies
+// Parse requests
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cookieParser());
 
-// helper: auth middleware
-async function requireAuth(req, res, next) {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.redirect('/login');
-  }
-
-  try {
-    const result = await grpcClient.validateToken(token);
-    if (!result.valid) {
-      return res.redirect('/login');
-    }
-
-    // attach user info for later use
-    req.user = {
-      id: result.user_id,
-      role: result.role
-    };
-
-    next();
-  } catch (err) {
-    console.error('ValidateToken error:', err);
-    return res.redirect('/login');
-  }
-}
-
-// routes
-
-// home: redirect to login or dashboard
-app.get('/', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.redirect('/login');
-  }
-
-  try {
-    const result = await grpcClient.validateToken(token);
-    if (result.valid) {
-      return res.redirect('/dashboard');
-    }
-    return res.redirect('/login');
-  } catch {
-    return res.redirect('/login');
-  }
+// Make user info available in all views
+app.use((req, res, next) => {
+  res.locals.user = null;
+  res.locals.error = null;
+  res.locals.success = null;
+  next();
 });
 
-// GET login page
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '../html', 'login.html'));
+// Routes
+app.get('/', (req, res) => res.redirect('/dashboard'));
+app.get('/login', authController.getLogin);
+app.post('/login', authController.postLogin);
+app.get('/logout', authController.logout);
+
+// Protected routes
+app.get('/dashboard', authMiddleware.requireAuth, dashboardController.getDashboard);
+app.get('/view-parking', authMiddleware.requireAuth, viewParkingController.getParkingSlots);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).render('error', { 
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
 });
 
-// POST login -> call gRPC AuthService.Login
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const resp = await grpcClient.login(username, password);
-
-    if (!resp.success) {
-      console.log('Login failed:', resp.message);
-      return res.redirect('/login');
-    }
-
-    res.cookie('token', resp.token, {
-      httpOnly: true,
-      maxAge: 60 * 60 * 1000
-    });
-
-    res.redirect('/dashboard');
-  } catch (err) {
-    console.error('Login error:', err);
-    res.redirect('/login');
-  }
-});
-
-
-// dashboard: protected route
-app.get('/dashboard', requireAuth, (req, res) => {
-  // later you can render dynamic HTML; for now just send a static file
-  res.sendFile(path.join(__dirname, '../html', 'dashboard.html'));
-});
-
-// logout
-app.get('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.redirect('/login');
+// 404 handler
+app.use((req, res) => {
+  res.status(404).render('error', { 
+    message: 'Page not found' 
+  });
 });
 
 app.listen(PORT, () => {
-  console.log(`Viewservice listening on 0.0.0.0:${PORT}`);
+  console.log(`✅ Viewservice running on port ${PORT}`);
+  console.log(`🌐 Dashboard: http://localhost:${PORT}/dashboard`);
 });

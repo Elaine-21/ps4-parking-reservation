@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "ejs": "^3.1.10",
     "google-protobuf": "^4.0.1",
     "grpc-web": "^2.0.2",
     "pg": "^8.16.3"

@@ -46,6 +46,8 @@ services:
       DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
     depends_on:
       - db
+    volumes:
+    - ./common/proto:/app/proto
 
   # reservation-related microservice (create / complete reservations)
   reservation-service:
@@ -68,6 +70,7 @@ services:
       DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
     depends_on:
       - db
+    
 
   # violations microservice
   violation-service:
