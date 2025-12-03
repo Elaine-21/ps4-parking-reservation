@@ -2,12 +2,16 @@ syntax = "proto3";
 
 package auth;
 
+// Main auth service
 service AuthService {
   rpc Login (LoginRequest) returns (AuthResponse);
   rpc Logout (LogoutRequest) returns (StatusResponse);
   rpc ValidateToken (ValidateRequest) returns (ValidateResponse);
   rpc GetUserInfo (UserRequest) returns (UserResponse);
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
 }
+
+// ===== Login / Logout =====
 
 message LoginRequest {
   string username = 1;
@@ -16,15 +20,25 @@ message LoginRequest {
 
 message AuthResponse {
   bool success = 1;
-  string token = 2;        // JWT
+  string token = 2;
   string user_id = 3;
-  string role = 4;         // "student" | "faculty" | "admin"
-  string message = 5;
+  string username = 4;
+  string first_name = 5;
+  string last_name = 6;
+  string role = 7;       // "student" | "faculty" | "admin"
+  string message = 8;
 }
 
 message LogoutRequest {
   string token = 1;
 }
+
+message StatusResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ===== Token validation =====
 
 message ValidateRequest {
   string token = 1;
@@ -33,10 +47,42 @@ message ValidateRequest {
 message ValidateResponse {
   bool valid = 1;
   string user_id = 2;
-  string role = 3;
+  string username = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string role = 6;
+  string message = 7;
 }
 
-message StatusResponse {
+// ===== User info =====
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string role = 5;
+  string created_at = 6; // keep as string for simplicity
+}
+
+message UserResponse {
   bool success = 1;
-  string message = 2;
+  User user = 2;
+  string message = 3;
+}
+
+// ===== List users =====
+
+message ListUsersRequest {
+}
+
+message ListUsersResponse {
+  bool success = 1;
+  repeated User users = 2;
+  int32 count = 3;
+  string message = 4;
 }

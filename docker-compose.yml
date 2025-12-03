@@ -30,6 +30,8 @@ services:
     depends_on:
       - db
       - redis
+    volumes:
+      - ./common/proto:/app/proto
 
   # gRPC parking microservice
   # even if the folder is called view-parking-service,
@@ -69,7 +71,7 @@ services:
 
   # violations microservice
   violation-service:
-    build: ./upload-violations-service
+    build: ./upload-violation-service
     ports:
       - "50055:50055"  # gRPC port
       - "3005:3005"    # REST port
@@ -88,10 +90,12 @@ services:
       PARKING_SERVICE_URL: parking-service:50052
     depends_on:
       - auth-service
-      - parking-service
-      - reservation-service
-      - reservations-view-service
-      - violation-service
+      # - parking-service
+      # - reservation-service
+      # - reservations-view-service
+      # - violation-service
+    volumes:
+      - ./common:/app/common
 
 volumes:
   postgres_data:
