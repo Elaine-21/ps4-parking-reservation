@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <h2 style="text-align: center;">Reserve Parking Slot</h2>
+
+  <form action="/postReserve" method="POST">
+
+    <!-- Parking Slot -->
+    <label>Parking Slot</label>
+    <input type="text" name="slotId" value="<%= selectedSlotId %>" readonly>
+
+    <!-- First Name -->
+    <label>First Name</label>
+    <input type="text" name="firstName" value="<%= user.firstName %>" readonly>
+
+    <!-- Last Name -->
+    <label>Last Name</label>
+    <input type="text" name="lastName" value="<%= user.lastName %>" readonly>
+
+    <!-- Vehicle Plate Number -->
+    <label>Vehicle Plate Number</label>
+    <input type="text" name="plateNumber" placeholder="Enter plate number" required>
+
+    <!-- Vehicle Type -->
+    <label>Vehicle Type</label>
+    <input type="text" name="vehicleType" placeholder="Enter vehicle type" required>
+
+    <!-- Date -->
+    <label>Date</label>
+    <input type="date" name="date" required>
+
+    <!-- Start Time -->
+    <label>Start Time</label>
+    <input type="time" name="startTime" required>
+
+    <!-- End Time -->
+    <label>End Time</label>
+    <input type="time" name="endTime" required>
+
+    <button type="submit">Submit Reservation</button>
+  </form>
+
+</body>
+</html>

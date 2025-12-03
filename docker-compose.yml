@@ -59,6 +59,8 @@ services:
       DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
     depends_on:
       - db
+    volumes:
+    - ./common/proto:/app/proto
 
   # reservation viewing microservice (list/history)
   reservations-view-service:

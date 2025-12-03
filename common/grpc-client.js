@@ -82,6 +82,9 @@ class GrpcClient {
         RESERVATION_VIEW_ADDRESS,
         grpc.credentials.createInsecure()
       );
+    }else{
+      this.reservationWriteClient = null;
+      this.reservationViewClient = null;
     }
 
     const ViolationService = loadService(
@@ -132,6 +135,31 @@ class GrpcClient {
       this.parkingClient.GetParkingSlots({ type, floor }, (err, response) => {
         if (err) return reject(err);
         resolve(response.slots);
+      });
+    });
+  }
+
+  createReservation(payload) {
+    return new Promise((resolve, reject) => {
+      if (!this.reservationWriteClient) {
+        return reject(new Error('reservationWriteClient not initialized'));
+      }
+      this.reservationWriteClient.CreateReservation(payload, (err, res) => {
+        if (err) return reject(err);
+        resolve(res);
+      });
+    });
+  }
+
+  getMyReservation(user_id) {
+    return new Promise((resolve, reject) => {
+      if (!this.reservationViewClient && !this.reservationWriteClient) {
+        return reject(new Error('reservation client not initialized'));
+      }
+      const client = this.reservationViewClient || this.reservationWriteClient;
+      client.GetMyReservation({ user_id }, (err, res) => {
+        if (err) return reject(err);
+        resolve(res);
       });
     });
   }

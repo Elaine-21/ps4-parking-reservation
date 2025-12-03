@@ -6,9 +6,9 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 // const PROTO_PATH = path.join(__dirname, '../common/proto/auth.proto');
-const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
+// const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
 
-// const PROTO_PATH = '/app/proto/auth.proto';
+const PROTO_PATH = '/app/proto/auth.proto';
 
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {

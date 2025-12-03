@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const authController = require('./controllers/authController');
 const dashboardController = require('./controllers/dashboardController');
 const viewParkingController = require('./controllers/viewParkingController');
+const reserveParkingController = require('./controllers/reserveParkingController');
 
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
@@ -43,6 +44,8 @@ app.get('/logout', authController.logout);
 // Protected routes
 app.get('/dashboard', authMiddleware.requireAuth, dashboardController.getDashboard);
 app.get('/view-parking', authMiddleware.requireAuth, viewParkingController.getParkingSlots);
+app.get('/reserve-parking/:slotId', authMiddleware.requireAuth, reserveParkingController.getReservation);
+app.post('/postReserve', authMiddleware.requireAuth, reserveParkingController.postReserve);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
