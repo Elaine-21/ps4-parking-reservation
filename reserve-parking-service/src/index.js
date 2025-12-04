@@ -3,8 +3,8 @@ const protoLoader = require('@grpc/proto-loader');
 const { Pool } = require('pg');
 const path = require('path');
 
-const PROTO_PATH = '/app/proto/reservation.proto';
-//const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
+//const PROTO_PATH = '/app/proto/reservation.proto';
+const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
 
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
@@ -38,9 +38,9 @@ function mapReservationRow(row) {
 
 // Simple CreateReservation implementation
 async function CreateReservation(call, callback) {
-  // const { user_id, parking_id, plate_number, date, start_time, end_time } =
-  //   call.request;
-  const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } = call.request;
+  const { user_id, parking_id, plate_number, date, start_time, end_time } =
+  call.request;
+  //const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } = call.request;
 
   try {
     const insert = `
