@@ -30,7 +30,7 @@
               <% groupedByFloor[floorKey].forEach(function(slot) { 
                  const status = (slot.status || '').toLowerCase(); %>
                 <div class="slot <%= status %>">
-                  <div style="font-weight: bold; font-size: 1.1em;"><%= slot.slot_number %></div>
+                  <div style="font-weight: bold; font-size: 1.1em;">Slot <%= slot.slot_number %></div>
                   <div style="font-size: 0.8em; color: #555;"><%= slot.type %></div>
                   <div style="font-size: 0.8em; text-transform: uppercase; margin-top: 5px;"><%= status %></div>
                   <% if (status === 'available') { %>
