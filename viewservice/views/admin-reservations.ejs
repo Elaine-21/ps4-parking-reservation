@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .filter-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin: Filter Reservations</h1>
+    <p><a href="/dashboard">← Back to Dashboard</a></p>
+  </header>
+
+  <main>
+    <div class="filter-box">
+      <form action="/admin/reservations/filter" method="GET">
+        <label>Date: <input type="date" name="date" value="<%= filters.date || '' %>" required></label>
+        <label>Vehicle Type: 
+          <select name="type">
+            <option value="Car" <%= filters.type === 'Car' ? 'selected' : '' %>>Car</option>
+            <option value="Motorcycle" <%= filters.type === 'Motorcycle' ? 'selected' : '' %>>Motorcycle</option>
+          </select>
+        </label>
+        <label>Floor: <input type="number" name="floor" value="<%= filters.floor || '' %>" required></label>
+        <button type="submit">Filter</button>
+      </form>
+    </div>
+
+    <% if (reservations.length === 0) { %>
+      <p>No reservations found for these criteria.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Res ID</th>
+            <th>Patron ID</th>
+            <th>Plate</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% reservations.forEach(function(r) { %>
+            <tr>
+              <td><%= r.id %></td>
+              <td><%= r.user_id %></td>
+              <td><%= r.vehicle_plate %></td>
+              <td><%= r.date %></td>
+              <td><%= r.start_time %> - <%= r.end_time %></td>
+              <td><%= r.status %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </main>
+</body>
+</html>
