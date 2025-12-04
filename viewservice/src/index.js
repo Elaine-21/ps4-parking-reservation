@@ -8,6 +8,8 @@ const authController = require('./controllers/authController');
 const dashboardController = require('./controllers/dashboardController');
 const viewParkingController = require('./controllers/viewParkingController');
 const reserveParkingController = require('./controllers/reserveParkingController');
+const adminController = require('./controllers/adminController');
+const violationController = require('./controllers/violationController');
 
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
@@ -46,6 +48,14 @@ app.get('/dashboard', authMiddleware.requireAuth, dashboardController.getDashboa
 app.get('/view-parking', authMiddleware.requireAuth, viewParkingController.getParkingSlots);
 app.get('/reserve-parking', authMiddleware.requireAuth, reserveParkingController.getReservation);
 app.post('/postReserve', authMiddleware.requireAuth, reserveParkingController.postReserve);
+
+// 1. Admin: View Reservations (Filter by Date/Type/Floor)
+app.get('/admin/reservations', authMiddleware.requireAuth, adminController.getView);
+app.get('/admin/reservations/filter', authMiddleware.requireAuth, adminController.filterReservations);
+
+// 2. Staff: Upload Violation
+app.get('/violation/upload', authMiddleware.requireAuth, violationController.getUpload);
+app.post('/violation/upload', authMiddleware.requireAuth, violationController.postUpload);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
