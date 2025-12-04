@@ -1,65 +1,51 @@
-<!-- views/view-parking.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title><%= title %></title>
+  <title>Parking Map</title>
   <link rel="stylesheet" href="/static/style.css" />
   <style>
-    /* small inline styles for clarity; move to css file if you like */
-    .floor { margin-bottom: 2rem; padding: 1rem; border: 1px solid #ddd; border-radius: 6px; }
-    .slot { display: inline-block; width: 120px; padding: 8px; margin: 6px; text-align: center; border-radius: 4px; }
-    .slot.available { background: #e6ffed; }
-    .slot.occupied  { background: #ffe6e6; }
-    .slot.reserved  { background: #fff4cc; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .slot { padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ddd; }
+    .slot.available { background: #dcfce7; border-color: #86efac; }
+    .slot.occupied { background: #fee2e2; border-color: #fca5a5; opacity: 0.8; }
+    .slot.reserved { background: #fef9c3; border-color: #fde047; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Parking Slots</h1>
-    <p><a href="/dashboard">← Back to Dashboard</a></p>
-  </header>
+  <div class="container">
+    <div class="card">
+      <header>
+        <h2>Parking Map</h2>
+        <a href="/dashboard">← Back</a>
+      </header>
 
-  <main>
-    <% if (!parkingSlots || parkingSlots.length === 0) { %>
-      <p>No parking slots found.</p>
-    <% } else { %>
-      <% Object.keys(groupedByFloor).sort((a,b) => Number(a) - Number(b)).forEach(function(floorKey) { %>
-        <section class="floor">
-          <h2>Floor <%= floorKey %></h2>
-
-          <div class="slots">
-            <% groupedByFloor[floorKey].forEach(function(slot) { %>
-              <% 
-                const rawStatus = slot.status || '';
-                const status = rawStatus.toLowerCase();
-                const statusClass =
-                  status === 'available'
-                    ? 'available'
-                    : status === 'occupied'
-                    ? 'occupied'
-                    : 'reserved';
-
-                const isReservable = status === 'available';
-                const displayStatus = (status === 'occupied') ? 'Reserved' : rawStatus;
-              %>
-              <div class="slot <%= statusClass %>">
-                <div><strong><%= slot.slot_number || slot.number || slot.id  %></strong></div>
-                <div style="font-size:0.9em"><%= slot.type || '' %></div>
-                <div style="font-size:0.85em; margin-top:6px;"><%= displayStatus || 'unknown' %></div>
-
-                <% if (isReservable) { %>
-                <form method="GET" action="/reserve-parking">
-                  <input type="hidden" name="slotId" value="<%= slot.id %>">
-                  <button type="submit">Reserve</button>
-                </form>
-                <% } %>
-              </div>
-            <% }); %>
+      <% if (!parkingSlots || parkingSlots.length === 0) { %>
+        <p>No parking slots found.</p>
+      <% } else { %>
+        <% Object.keys(groupedByFloor).sort((a,b) => Number(a) - Number(b)).forEach(function(floorKey) { %>
+          <div style="margin-bottom: 30px;">
+            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">Floor <%= floorKey %></h3>
+            <div class="slots-grid">
+              <% groupedByFloor[floorKey].forEach(function(slot) { 
+                 const status = (slot.status || '').toLowerCase(); %>
+                <div class="slot <%= status %>">
+                  <div style="font-weight: bold; font-size: 1.1em;"><%= slot.slot_number %></div>
+                  <div style="font-size: 0.8em; color: #555;"><%= slot.type %></div>
+                  <div style="font-size: 0.8em; text-transform: uppercase; margin-top: 5px;"><%= status %></div>
+                  <% if (status === 'available') { %>
+                    <form method="GET" action="/reserve-parking" style="margin-top: 5px;">
+                      <input type="hidden" name="slotId" value="<%= slot.id %>">
+                      <button type="submit" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8em; margin:0;">Reserve</button>
+                    </form>
+                  <% } %>
+                </div>
+              <% }); %>
+            </div>
           </div>
-        </section>
-      <% }); %>
-    <% } %>
-  </main>
+        <% }); %>
+      <% } %>
+    </div>
+  </div>
 </body>
 </html>

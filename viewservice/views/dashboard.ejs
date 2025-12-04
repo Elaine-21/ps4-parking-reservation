@@ -2,40 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title><%= title %></title>
+  <title>Dashboard</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <header>
-    <h1>Parking Reservation Dashboard</h1>
+  <div class="container">
+    <div class="card">
+      <header>
+        <div>
+          <h1>Dashboard</h1>
+          <% if (user) { %>
+            <p style="color: #666; margin-top: 5px;">
+              Welcome, <strong><%= user.firstName %> <%= user.lastName %></strong> 
+              <span style="background:#e5e7eb; padding:2px 6px; border-radius:4px; font-size:0.8em;"><%= user.role %></span>
+            </p>
+          <% } %>
+        </div>
+        <a href="/logout" style="color: var(--danger);">Logout</a>
+      </header>
 
-    <% if (user) { %>
-      <p>Welcome, <strong><%= user.fullName %></strong> (<%= user.role %>)</p>
-      <p>User ID: <%= user.id %></p>
-    <% } %>
+      <% if (locals.success) { %>
+        <div class="alert alert-success"><%= success %></div>
+      <% } %>
 
-    <p><a href="/logout">Logout</a></p>
-  </header>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 2rem;">
+        <div>
+          <h3>📅 Today</h3>
+          <p><%= currentDate || new Date().toLocaleDateString() %></p>
+        </div>
+        <div>
+          <h3>🕒 Time</h3>
+          <p><%= currentTime || new Date().toLocaleTimeString() %></p>
+        </div>
+      </div>
 
-  <% if (error) { %>
-    <div class="alert alert-error"><%= error %></div>
-  <% } %>
+      <h3>⚡ Quick Actions</h3>
+      <div class="actions">
+        <a href="/view-parking" class="btn btn-primary">View Parking Map</a>
+        
+        <% if (user.role === 'student' || user.role === 'faculty') { %>
+          <a href="/reserve-parking" class="btn btn-primary">Reserve a Slot</a>
+        <% } %>
 
-  <section>
-    <h2>Today</h2>
-    <p>Date: <%= currentDate %></p>
-    <p>Time: <%= currentTime %></p>
-  </section>
+        <% if (user.role === 'admin' || user.role === 'faculty') { %>
+          <a href="/violation/upload" class="btn btn-danger">Report Violation</a>
+        <% } %>
 
-  <section>
-    <h2>My Current Reservation</h2>
-    <p>(Later you can show reservations for user ID <%= user.id %> here.)</p>
-  </section>
-
-  <section>
-    <a href="/view-parking" class="btn">View Parking Slots</a>
-    <a href="/reserve-parking" class="btn">Reserve Parking Slots</a>
-    
-  </section>
+        <% if (user.role === 'admin') { %>
+          <a href="/admin/reservations" class="btn btn-warning">Admin Panel</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
