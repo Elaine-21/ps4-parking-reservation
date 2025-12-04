@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS reservations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_reservation_per_slot_per_day
+ON reservations (parking_id, date)
+WHERE status = 'Active';
+
 -- Violations table
 CREATE TABLE IF NOT EXISTS violations (
     id SERIAL PRIMARY KEY,

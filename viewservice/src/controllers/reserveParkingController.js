@@ -5,12 +5,30 @@ const viewParkingController = {
         try {
             const user = req.user;
             const selectedSlotId = req.query.slotId || null;
+            let initialVehicleType = '';
+            const allSlots = await grpcClient.getParkingSlots(null, null);
 
-        res.render('reserve-parking', {
-            title: 'Reservation',
-            user,
-            selectedSlotId
-        });
+            // Only keep slots that are reservable (Available)
+            const parkingSlots = allSlots.filter(slot =>
+                (slot.status || '').toLowerCase() === 'available'
+            );
+
+            if (selectedSlotId) {
+                const selectedSlot = parkingSlots.find(
+                s => String(s.id) === String(selectedSlotId)
+                );
+                if (selectedSlot) {
+                initialVehicleType = selectedSlot.type;
+                }
+            }
+
+            res.render('reserve-parking', {
+                title: 'Reservation',
+                user,
+                selectedSlotId,
+                parkingSlots,
+                initialVehicleType
+            });
         }catch (err) {
         console.error('Error loading reservation page:', err);
         res.render('dashboard', {
@@ -21,20 +39,20 @@ const viewParkingController = {
         }
             
     },
+
     postReserve: async (req, res) => {
         try {
-        const user = req.user;
-        const {
+            const user = req.user;
+            const {
             slotId,
             plateNumber,
             vehicleType,
             date,
             startTime,
             endTime
-        } = req.body;
+            } = req.body;
 
-        // For now, assume vehicle_type 'car' or extend your form to include it
-        const payload = {
+            const payload = {
             user_id: String(user.id),
             parking_id: String(slotId),
             plate_number: plateNumber,
@@ -42,31 +60,52 @@ const viewParkingController = {
             date,
             start_time: startTime,
             end_time: endTime
-        };
+            };
 
-        const result = await grpcClient.createReservation(payload);
+            const result = await grpcClient.createReservation(payload);
 
-        if (!result.success) {
-            return res.render('reserve-parking', {
-            title: 'Reserve Parking Slot',
-            user,
-            selectedSlotId: slotId,
-            error: result.message || 'Failed to create reservation'
-            });
-        }
+            if (!result.success) {
+                const allSlots = await grpcClient.getParkingSlots(null, null);
+                const parkingSlots = allSlots.filter(slot =>
+                    (slot.status || '').toLowerCase() === 'available'
+                );
 
-        // Success → maybe show dashboard with message
-        res.redirect('/dashboard');
+                return res.status(400).render('reserve-parking', {
+                    title: 'Reserve Parking Slot',
+                    user,
+                    selectedSlotId: slotId,
+                    parkingSlots,
+                    initialVehicleType: vehicleType,
+                    error: result.message || 'Failed to create reservation'
+                });
+            }
+
+            // Success → back to dashboard (or show success message)
+            res.redirect('/dashboard');
         } catch (err) {
-        console.error('postReserve error:', err);
-        res.render('reserve-parking', {
-            title: 'Reserve Parking Slot',
-            user: req.user,
-            selectedSlotId: req.body.slotId,
-            error: 'Unexpected error while creating reservation'
-        });
+            console.error('postReserve error:', err);
+            try {
+                const allSlots = await grpcClient.getParkingSlots(null, null);
+                const parkingSlots = allSlots.filter(slot =>
+                (slot.status || '').toLowerCase() === 'available'
+                );
+
+                return res.status(500).render('reserve-parking', {
+                title: 'Reserve Parking Slot',
+                user: req.user,
+                selectedSlotId: req.body.slotId,
+                parkingSlots,
+                initialVehicleType: req.body.vehicleType,
+                error: 'Unexpected error while creating reservation'
+                });
+            } catch (err2) {
+                console.error('postReserve secondary error:', err2);
+                return res.status(500).send('Unexpected error while creating reservation');
+            }
         }
     }
+
+
 };
 
 
