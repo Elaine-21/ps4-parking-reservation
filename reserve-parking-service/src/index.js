@@ -44,10 +44,11 @@ function mapReservationRow(row) {
 // Simple CreateReservation implementation
 
 async function CreateReservation(call, callback) {
-  const { user_id, parking_id, vehicle_plate, vehicle_type, date, start_time, end_time } = call.request;
+  // FIX 1: We receive 'plate_number' from the proto request, NOT 'vehicle_plate'
+  const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } = call.request;
 
   try {
-    // 1) Check for an existing ACTIVE reservation on the same slot + date
+    // 1) Check for an existing ACTIVE reservation
     const checkSql = `
       SELECT id
       FROM reservations
@@ -60,7 +61,6 @@ async function CreateReservation(call, callback) {
     const checkRes = await pool.query(checkSql, [parking_id, date]);
 
     if (checkRes.rows.length > 0) {
-      // Conflict – treat as a BUSINESS ERROR, not a server crash
       return callback(null, {
         success: false,
         conflict: true,
@@ -80,7 +80,7 @@ async function CreateReservation(call, callback) {
     const { rows } = await pool.query(insert, [
       user_id,
       parking_id,
-      vehicle_plate,
+      plate_number, // FIX 2: Pass the correct variable here
       vehicle_type,
       date,
       start_time,
@@ -106,11 +106,11 @@ async function CreateReservation(call, callback) {
       });
     }
 
-    // Again, do NOT send gRPC error object – send a normal response
+    // Send a safe error message back
     return callback(null, {
       success: false,
       conflict: false,
-      message: 'Internal server error while creating reservation.'
+      message: 'Database error: ' + err.message
     });
   }
 }
