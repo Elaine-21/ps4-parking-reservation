@@ -31,19 +31,29 @@
           <div class="slots">
             <% groupedByFloor[floorKey].forEach(function(slot) { %>
               <% 
-                // determine class from slot.status (normalize to lowercase)
-                const status = (slot.status || '').toLowerCase();
-                const statusClass = status === 'available' ? 'available' : (status === 'occupied' ? 'occupied' : 'reserved');
+                const rawStatus = slot.status || '';
+                const status = rawStatus.toLowerCase();
+                const statusClass =
+                  status === 'available'
+                    ? 'available'
+                    : status === 'occupied'
+                    ? 'occupied'
+                    : 'reserved';
+
+                const isReservable = status === 'available';
+                const displayStatus = (status === 'occupied') ? 'Reserved' : rawStatus;
               %>
               <div class="slot <%= statusClass %>">
-                <div><strong><%= slot.number || slot.id %></strong></div>
-                <div style="font-size:0.9em"><%= slot.type ? slot.type : '' %></div>
-                <div style="font-size:0.85em; margin-top:6px;"><%= slot.status || 'unknown' %></div>
+                <div><strong><%= slot.slot_number || slot.number || slot.id  %></strong></div>
+                <div style="font-size:0.9em"><%= slot.type || '' %></div>
+                <div style="font-size:0.85em; margin-top:6px;"><%= displayStatus || 'unknown' %></div>
 
-                <!-- optional action button per slot -->
-                <form method="GET" action="/reserve-parking/<%= slot.id %>">
+                <% if (isReservable) { %>
+                <form method="GET" action="/reserve-parking">
+                  <input type="hidden" name="slotId" value="<%= slot.id %>">
                   <button type="submit">Reserve</button>
                 </form>
+                <% } %>
               </div>
             <% }); %>
           </div>

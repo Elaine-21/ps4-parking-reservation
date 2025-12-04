@@ -47,7 +47,7 @@ services:
     depends_on:
       - db
     volumes:
-    - ./common/proto:/app/proto
+      - ./common/proto:/app/proto
 
   # reservation-related microservice (create / complete reservations)
   reservation-service:
@@ -60,30 +60,32 @@ services:
     depends_on:
       - db
     volumes:
-    - ./common/proto:/app/proto
+      - ./common/proto:/app/proto
 
   # reservation viewing microservice (list/history)
-  # reservations-view-service:
-  #   build: ./view-reservations-service
-  #   ports:
-  #     - "50054:50054"  # gRPC port
-  #     - "3004:3004"    # REST port
-  #   environment:
-  #     DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
-  #   depends_on:
-  #     - db
+  reservations-view-service:
+    build: ./view-reservations-service
+    ports:
+      - "50054:50054"  # gRPC port
+      - "3004:3004"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
+    volumes:
+      - ./common/proto:/app/proto
     
 
-  # # violations microservice
-  # violation-service:
-  #   build: ./upload-violation-service
-  #   ports:
-  #     - "50055:50055"  # gRPC port
-  #     - "3005:3005"    # REST port
-  #   environment:
-  #     DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
-  #   depends_on:
-  #     - db
+  # violations microservice
+  violation-service:
+    build: ./upload-violation-service
+    ports:
+      - "50055:50055"  # gRPC port
+      - "3005:3005"    # REST port
+    environment:
+      DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
+    depends_on:
+      - db
 
   # main web frontend (MVC / Express) that calls all gRPC services
   viewservice:

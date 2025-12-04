@@ -3,9 +3,9 @@ const protoLoader = require('@grpc/proto-loader');
 const { Pool } = require('pg');
 const path = require('path');
 
-//const PROTO_PATH = '/app/proto/reservation.proto';
-const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
-
+// const PROTO_PATH = '/app/proto/reservation.proto';
+const PROTO_PATH = path.join(__dirname, '../proto/reservation.proto');
+// const PROTO_PATH = '/app/proto/reservation.proto';
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -23,38 +23,64 @@ const pool = new Pool({
 });
 
 function mapReservationRow(row) {
+  let uiStatus = row.status;
+  if (row.status === 'Active') {
+    uiStatus = 'Reserved'; // UI label
+  }
+
   return {
     id: String(row.id),
     user_id: String(row.user_id),
     parking_id: String(row.parking_id),
     plate_number: row.vehicle_plate,
     vehicle_type: row.vehicle_type,
-    date: row.date.toISOString().slice(0, 10),      // YYYY-MM-DD
-    start_time: row.start_time.toString().slice(0, 5), // HH:MM
+    date: row.date.toISOString().slice(0, 10),
+    start_time: row.start_time.toString().slice(0, 5),
     end_time: row.end_time.toString().slice(0, 5),
-    status: row.status
+    status: uiStatus
   };
 }
 
 // Simple CreateReservation implementation
+
 async function CreateReservation(call, callback) {
-  const { user_id, parking_id, plate_number, date, start_time, end_time } =
-  call.request;
-  //const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } = call.request;
+  const { user_id, parking_id, vehicle_plate, vehicle_type, date, start_time, end_time } = call.request;
 
   try {
+    // 1) Check for an existing ACTIVE reservation on the same slot + date
+    const checkSql = `
+      SELECT id
+      FROM reservations
+      WHERE parking_id = $1
+        AND date = $2
+        AND status = 'Active'
+      LIMIT 1
+    `;
+
+    const checkRes = await pool.query(checkSql, [parking_id, date]);
+
+    if (checkRes.rows.length > 0) {
+      // Conflict – treat as a BUSINESS ERROR, not a server crash
+      return callback(null, {
+        success: false,
+        conflict: true,
+        message: 'This parking slot is already reserved for that date.'
+      });
+    }
+
+    // 2) Insert reservation
     const insert = `
       INSERT INTO reservations
         (user_id, parking_id, vehicle_plate, vehicle_type, date, start_time, end_time, status)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7, 'active')
+        ($1, $2, $3, $4, $5, $6, $7, 'Active')
       RETURNING *
     `;
 
     const { rows } = await pool.query(insert, [
       user_id,
       parking_id,
-      plate_number,
+      vehicle_plate,
       vehicle_type,
       date,
       start_time,
@@ -65,14 +91,26 @@ async function CreateReservation(call, callback) {
 
     callback(null, {
       success: true,
+      conflict: false,
       message: 'Reservation created successfully',
       reservation
     });
   } catch (err) {
     console.error('🚨 CreateReservation error:', err);
-    callback(null, {
+
+    if (err.code === '23505') {
+      return callback(null, {
+        success: false,
+        conflict: true,
+        message: 'This parking slot is already reserved for that date.'
+      });
+    }
+
+    // Again, do NOT send gRPC error object – send a normal response
+    return callback(null, {
       success: false,
-      message: 'Failed to create reservation'
+      conflict: false,
+      message: 'Internal server error while creating reservation.'
     });
   }
 }

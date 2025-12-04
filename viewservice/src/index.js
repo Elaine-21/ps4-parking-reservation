@@ -44,23 +44,36 @@ app.get('/logout', authController.logout);
 // Protected routes
 app.get('/dashboard', authMiddleware.requireAuth, dashboardController.getDashboard);
 app.get('/view-parking', authMiddleware.requireAuth, viewParkingController.getParkingSlots);
-app.get('/reserve-parking/:slotId', authMiddleware.requireAuth, reserveParkingController.getReservation);
+app.get('/reserve-parking', authMiddleware.requireAuth, reserveParkingController.getReservation);
 app.post('/postReserve', authMiddleware.requireAuth, reserveParkingController.postReserve);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).render('error', { 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
+  console.error('Unhandled error:', err);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const msg = err && err.message ? err.message : 'Something went wrong';
+
+  res
+    .status(err.status || 500)
+    .send(`
+      <h1>Error</h1>
+      <p>${msg}</p>
+      <p><a href="/dashboard">Back to dashboard</a></p>
+    `);
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).render('error', { 
-    message: 'Page not found' 
-  });
+  res
+    .status(404)
+    .send(`
+      <h1>Page not found</h1>
+      <p><a href="/dashboard">Back to dashboard</a></p>
+    `);
 });
 
 app.listen(PORT, () => {

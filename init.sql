@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS parking_slots (
     id SERIAL PRIMARY KEY,
     slot_number VARCHAR(10) NOT NULL,
     floor INTEGER NOT NULL,
-    type VARCHAR(10) NOT NULL CHECK (type IN ('car', 'motor')),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('available', 'occupied', 'maintenance')),
+    type VARCHAR(10) NOT NULL CHECK (type IN ('Car', 'Motorcycle')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('Available', 'Occupied', 'Maintenance')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,13 +25,17 @@ CREATE TABLE IF NOT EXISTS reservations (
     user_id INTEGER REFERENCES users(id),
     parking_id INTEGER REFERENCES parking_slots(id),
     vehicle_plate VARCHAR(20) NOT NULL,
-    vehicle_type VARCHAR(10) NOT NULL CHECK (vehicle_type IN ('car', 'motor')),
+    vehicle_type VARCHAR(10) NOT NULL CHECK (vehicle_type IN ('Car', 'Motorcycle')),
     date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'cancelled', 'completed')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('Active', 'Cancelled', 'Completed')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_active_reservation_per_slot_per_day
+ON reservations (parking_id, date)
+WHERE status = 'Active';
 
 -- Violations table
 CREATE TABLE IF NOT EXISTS violations (
@@ -50,21 +54,21 @@ CREATE TABLE IF NOT EXISTS violations (
 -- Insert sample data
 -- Insert sample parking slots
 INSERT INTO parking_slots (slot_number, floor, type, status) VALUES
-('A1', 1, 'car', 'available'),
-('A2', 1, 'car', 'available'),
-('A3', 1, 'car', 'available'),
-('B1', 1, 'motor', 'available'),
-('B2', 1, 'motor', 'occupied'),
-('B3', 1, 'motor', 'available'),
-('A1', 2, 'car', 'maintenance'),
-('A2', 2, 'car', 'available'),
-('A3', 2, 'car', 'available'),
-('B1', 2, 'motor', 'available'),
-('B2', 2, 'motor', 'available'),
-('A1', 3, 'car', 'available'),
-('A2', 3, 'car', 'available'),
-('A3', 3, 'car', 'occupied'),
-('A4', 3, 'car', 'available'),
-('A5', 3, 'car', 'available'),
-('A6', 3, 'car', 'available')
+('A1', 1, 'Car', 'Available'),
+('A2', 1, 'Car', 'Available'),
+('A3', 1, 'Car', 'Available'),
+('B1', 1, 'Motorcycle', 'Available'),
+('B2', 1, 'Motorcycle', 'Occupied'),
+('B3', 1, 'Motorcycle', 'Available'),
+('A1', 2, 'Car', 'Maintenance'),
+('A2', 2, 'Car', 'Available'),
+('A3', 2, 'Car', 'Available'),
+('B1', 2, 'Motorcycle', 'Available'),
+('B2', 2, 'Motorcycle', 'Available'),
+('A1', 3, 'Car', 'Available'),
+('A2', 3, 'Car', 'Available'),
+('A3', 3, 'Car', 'Occupied'),
+('A4', 3, 'Car', 'Available'),
+('A5', 3, 'Car', 'Available'),
+('A6', 3, 'Car', 'Available')
 ON CONFLICT DO NOTHING;

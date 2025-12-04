@@ -9,42 +9,155 @@
 
   <h2 style="text-align: center;">Reserve Parking Slot</h2>
 
-  <form action="/postReserve" method="POST">
+  <!DOCTYPE html>
 
-    <!-- Parking Slot -->
-    <label>Parking Slot</label>
-    <input type="text" name="slotId" value="<%= selectedSlotId %>" readonly>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= title %></title>
 
-    <!-- First Name -->
-    <label>First Name</label>
-    <input type="text" name="firstName" value="<%= user.firstName %>" readonly>
+  <!-- Bootstrap 5 CSS -->
 
-    <!-- Last Name -->
-    <label>Last Name</label>
-    <input type="text" name="lastName" value="<%= user.lastName %>" readonly>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Vehicle Plate Number -->
-    <label>Vehicle Plate Number</label>
-    <input type="text" name="plateNumber" placeholder="Enter plate number" required>
+  <style>
+    body { background:#f8f9fa; }
+    .card { max-width: 720px; margin: 40px auto; }
+  </style>
 
-    <!-- Vehicle Type -->
-    <label>Vehicle Type</label>
-    <input type="text" name="vehicleType" placeholder="Enter vehicle type" required>
+</head>
+<body>
+  <div class="card-body">
+  <h3 class="card-title text-center mb-3">Reserve Parking Slot</h3>
 
-    <!-- Date -->
-    <label>Date</label>
-    <input type="date" name="date" required>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
 
-    <!-- Start Time -->
-    <label>Start Time</label>
-    <input type="time" name="startTime" required>
+  <div class="container">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-center mb-3">Reserve Parking Slot</h3>
 
-    <!-- End Time -->
-    <label>End Time</label>
-    <input type="time" name="endTime" required>
+    <form action="/postReserve" method="POST" class="needs-validation" novalidate>
+      <div class="row g-3">
+        <!-- Parking Slot -->
+        <div class="col-12">
+          <label for="slotId" class="form-label">Parking Slot</label>
+          <select id="slotId" name="slotId" class="form-select" required>
+            <option value="">Choose a parking slot...</option>
+            <% if (parkingSlots && parkingSlots.length) { %>
+              <% parkingSlots.forEach(function(slot) { %>
+                <option
+                  value="<%= slot.id %>"
+                  data-type="<%= slot.type %>"
+                  <%= (String(slot.id) === String(selectedSlotId)) ? 'selected' : '' %>
+                >
+                  <%= slot.slot_number || slot.number || ('Slot ' + slot.id) %>
+                  - Floor <%= slot.floor || slot.floor_number || '' %>
+                  (<%= slot.type %>)
+                </option>
+              <% }); %>
+            <% } %>
+          </select>
+          <div class="invalid-feedback">Please choose a parking slot.</div>
+        </div>
 
-    <button type="submit">Submit Reservation</button>
-  </form>
+        <!-- First & Last Name -->
+        <div class="col-md-6">
+          <label for="firstName" class="form-label">First Name</label>
+          <input id="firstName" name="firstName" type="text" class="form-control" value="<%= user.firstName %>" readonly>
+        </div>
+
+        <div class="col-md-6">
+          <label for="lastName" class="form-label">Last Name</label>
+          <input id="lastName" name="lastName" type="text" class="form-control" value="<%= user.lastName %>" readonly>
+        </div>
+
+        <!-- Vehicle Plate Number -->
+        <div class="col-md-6">
+          <label for="plateNumber" class="form-label">Vehicle Plate Number</label>
+          <input id="plateNumber" name="plateNumber" type="text" class="form-control" placeholder="ABC-1234" required>
+          <div class="invalid-feedback">Please enter your vehicle plate number.</div>
+        </div>
+
+        <!-- Vehicle Type (dropdown) -->
+        <div class="col-md-6">
+          <label for="vehicleType" class="form-label">Vehicle Type</label>
+          <input
+            id="vehicleType"
+            name="vehicleType"
+            type="text"
+            class="form-control"
+            value="<%= initialVehicleType || '' %>"
+            readonly
+            required
+          >
+          <div class="invalid-feedback">
+            Vehicle type will be set based on the parking slot.
+          </div>
+        </div>
+
+
+        <!-- Date -->
+        <div class="col-md-4">
+          <label for="date" class="form-label">Date</label>
+          <input id="date" name="date" type="date" class="form-control" required>
+          <div class="invalid-feedback">Please choose a date.</div>
+        </div>
+
+        <!-- Start Time -->
+        <div class="col-md-4">
+          <label for="startTime" class="form-label">Start Time</label>
+          <input id="startTime" name="startTime" type="time" class="form-control" required>
+          <div class="invalid-feedback">Please provide a start time.</div>
+        </div>
+
+        <!-- End Time -->
+        <div class="col-md-4">
+          <label for="endTime" class="form-label">End Time</label>
+          <input id="endTime" name="endTime" type="time" class="form-control" required>
+          <div class="invalid-feedback">Please provide an end time.</div>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 text-end mt-2">
+          <a href="/dashboard" class="btn btn-outline-secondary me-2">Cancel</a>
+          <button type="submit" class="btn btn-primary">Submit Reservation</button>
+        </div>
+      </div>
+    </form>
+    </div>
+  </div>
+
+</div>
+
+  <!-- Bootstrap 5 JS (Popper included) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Your custom JS for slot -> vehicle type -->
+  <script src="/static/reserve.js"></script>
+
+  <!-- Bootstrap validation -->
+  <script>
+    (function () {
+      'use strict'
+      const forms = document.querySelectorAll('.needs-validation')
+      Array.from(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+    })()
+  </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
