@@ -2,170 +2,85 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 
-// Paths to proto files (they’re in the same folder as this file)
+// Paths to proto files
 const authProtoPath        = path.join(__dirname, 'proto', 'auth.proto');
 const parkingProtoPath     = path.join(__dirname, 'proto', 'parking.proto');
 const reservationProtoPath = path.join(__dirname, 'proto', 'reservation.proto');
 const violationProtoPath   = path.join(__dirname, 'proto', 'violation.proto');
 
-// Service addresses (can be overridden by env)
+// Service addresses
 const AUTH_ADDRESS = process.env.AUTH_SERVICE_URL || 'auth-service:50051';
 const PARKING_ADDRESS = process.env.PARKING_SERVICE_URL || 'parking-service:50052';
-const RESERVATION_WRITE_ADDRESS = 'reservation-service:50053';
-const RESERVATION_VIEW_ADDRESS = 'reservations-view-service:50054';
-const VIOLATION_ADDRESS = 'violation-service:50055';
+const RESERVATION_WRITE_ADDRESS = process.env.RESERVATION_SERVICE_URL || 'reservation-service:50053';
+const RESERVATION_VIEW_ADDRESS = process.env.RESERVATIONS_VIEW_SERVICE_URL || 'reservations-view-service:50054';
+const VIOLATION_ADDRESS = process.env.VIOLATION_SERVICE_URL || 'violation-service:50055';
 
 function loadService(protoPath, packageName, serviceName) {
   const packageDefinition = protoLoader.loadSync(protoPath, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
+    keepCase: true, longs: String, enums: String, defaults: true, oneofs: true,
   });
-
-  const loaded = grpc.loadPackageDefinition(packageDefinition);
-
-  const pkg = loaded[packageName];
-  if (!pkg) {
-    console.error(`❌ Package '${packageName}' not found in proto ${protoPath}`);
-    return null;
-  }
-
-  const svc = pkg[serviceName];
-  if (!svc) {
-    console.error(`❌ Service '${packageName}.${serviceName}' not found in proto ${protoPath}`);
-    return null;
-  }
-
-  return svc;
+  return grpc.loadPackageDefinition(packageDefinition)[packageName][serviceName];
 }
 
 class GrpcClient {
   constructor() {
-    // Auth client
+    // 1. Auth Client
     const AuthService = loadService(authProtoPath, 'auth', 'AuthService');
-    if (AuthService) {
-      this.authClient = new AuthService(
-        AUTH_ADDRESS,
-        grpc.credentials.createInsecure()
-      );
-      console.log(`✅ gRPC auth client connected to ${AUTH_ADDRESS}`);
-    } else {
-      this.authClient = null;
-    }
+    this.authClient = new AuthService(AUTH_ADDRESS, grpc.credentials.createInsecure());
 
-    // Parking client (for later)
+    // 2. Parking Client
     const ParkingService = loadService(parkingProtoPath, 'parking', 'ParkingService');
-    if (ParkingService) {
-      this.parkingClient = new ParkingService(
-        PARKING_ADDRESS,
-        grpc.credentials.createInsecure()
-      );
-      console.log(`✅ gRPC parking client connected to ${PARKING_ADDRESS}`);
-    } else {
-      this.parkingClient = null;
-    }
+    this.parkingClient = new ParkingService(PARKING_ADDRESS, grpc.credentials.createInsecure());
 
-    // Reservation + Violation (for later – optional now)
-    const ReservationService = loadService(
-      reservationProtoPath,
-      'reservation',
-      'ReservationService'
-    );
-    if (ReservationService) {
-      this.reservationWriteClient = new ReservationService(
-        RESERVATION_WRITE_ADDRESS,
-        grpc.credentials.createInsecure()
-      );
-      this.reservationViewClient = new ReservationService(
-        RESERVATION_VIEW_ADDRESS,
-        grpc.credentials.createInsecure()
-      );
-    }else{
-      this.reservationWriteClient = null;
-      this.reservationViewClient = null;
-    }
+    // 3. Reservation Clients (Write & View)
+    const ReservationService = loadService(reservationProtoPath, 'reservation', 'ReservationService');
+    this.reservationWriteClient = new ReservationService(RESERVATION_WRITE_ADDRESS, grpc.credentials.createInsecure());
+    this.reservationViewClient = new ReservationService(RESERVATION_VIEW_ADDRESS, grpc.credentials.createInsecure());
 
-    const ViolationService = loadService(
-      violationProtoPath,
-      'violation',
-      'ViolationService'
-    );
-    if (ViolationService) {
-      this.violationClient = new ViolationService(
-        VIOLATION_ADDRESS,
-        grpc.credentials.createInsecure()
-      );
-    }
+    // 4. Violation Client
+    const ViolationService = loadService(violationProtoPath, 'violation', 'ViolationService');
+    this.violationClient = new ViolationService(VIOLATION_ADDRESS, grpc.credentials.createInsecure());
   }
 
-  // --- Auth methods ---
-
+  // --- Auth ---
   login(username, password) {
-    return new Promise((resolve, reject) => {
-      if (!this.authClient) {
-        return reject(new Error('authClient not initialized'));
-      }
-      this.authClient.Login({ username, password }, (err, response) => {
-        if (err) return reject(err);
-        resolve(response);
-      });
-    });
+    return new Promise((resolve) => this.authClient.Login({ username, password }, (err, res) => resolve(err ? { success: false, message: err.message } : res)));
   }
-
   validateToken(token) {
-    return new Promise((resolve, reject) => {
-      if (!this.authClient) {
-        return reject(new Error('authClient not initialized'));
-      }
-      this.authClient.ValidateToken({ token }, (err, response) => {
-        if (err) return reject(err);
-        resolve(response);
-      });
-    });
+    return new Promise((resolve) => this.authClient.ValidateToken({ token }, (err, res) => resolve(err ? { valid: false } : res)));
+  }
+  getUserInfo(user_id) {
+    return new Promise((resolve) => this.authClient.GetUserInfo({ user_id }, (err, res) => resolve(err ? { success: false } : res)));
   }
 
-  // --- Parking methods (for later) ---
+  // --- Parking ---
   getParkingSlots(type, floor) {
-    return new Promise((resolve, reject) => {
-      if (!this.parkingClient) {
-        return reject(new Error('parkingClient not initialized'));
-      }
-      this.parkingClient.GetParkingSlots({ type, floor }, (err, response) => {
-        if (err) return reject(err);
-        resolve(response.slots);
-      });
-    });
+    return new Promise((resolve) => this.parkingClient.GetParkingSlots({ type, floor }, (err, res) => resolve(res ? res.slots : [])));
   }
 
+  // --- Reservations ---
   createReservation(payload) {
+    return new Promise((resolve) => this.reservationWriteClient.CreateReservation(payload, (err, res) => resolve(err ? { success: false, message: err.message } : res)));
+  }
+
+  // NEW: Filter reservations by Date + Vehicle + Floor (Service 50054)
+  listReservations(date, vehicle_type, floor) {
     return new Promise((resolve, reject) => {
-      if (!this.reservationWriteClient) {
-        return reject(new Error('reservationWriteClient not initialized'));
-      }
-      this.reservationWriteClient.CreateReservation(payload, (err, res) => {
+      const payload = { date, vehicle_type, floor };
+      this.reservationViewClient.ListReservations(payload, (err, res) => {
         if (err) return reject(err);
-        resolve(res);
+        resolve(res.reservations || []);
       });
     });
   }
 
-  getMyReservation(user_id) {
+  // --- Violations ---
+  // NEW: Upload a violation (Service 50055)
+  uploadViolation(payload) {
     return new Promise((resolve, reject) => {
-      if (!this.reservationViewClient && !this.reservationWriteClient) {
-        return reject(new Error('reservation client not initialized'));
-      }
-      const client = this.reservationViewClient || this.reservationWriteClient;
-      client.GetMyReservation({ user_id }, (err, res) => {
-        if (err) return reject(err);
-        resolve(res);
-      });
+      this.violationClient.UploadViolation(payload, (err, res) => err ? reject(err) : resolve(res));
     });
   }
-
-  // Reservation + violation helpers (for later) can stay same style...
 }
 
 module.exports = new GrpcClient();
-
