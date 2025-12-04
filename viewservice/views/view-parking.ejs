@@ -5,11 +5,12 @@
   <title>Parking Map</title>
   <link rel="stylesheet" href="/static/style.css" />
   <style>
-    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-    .slot { padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ddd; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+    .slot { padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; }
     .slot.available { background: #dcfce7; border-color: #86efac; }
     .slot.occupied { background: #fee2e2; border-color: #fca5a5; opacity: 0.8; }
     .slot.reserved { background: #fef9c3; border-color: #fde047; }
+    .slot-id { font-size: 1.8em; font-weight: 800; margin-bottom: 5px; color: #333; }
   </style>
 </head>
 <body>
@@ -28,15 +29,20 @@
             <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">Floor <%= floorKey %></h3>
             <div class="slots-grid">
               <% groupedByFloor[floorKey].forEach(function(slot) { 
-                 const status = (slot.status || '').toLowerCase(); %>
+                 const status = (slot.status || '').toLowerCase(); 
+                 // Fallback to ensure we see SOMETHING if slot_number is missing
+                 const displayNum = slot.slot_number || slot.number || slot.id;
+              %>
                 <div class="slot <%= status %>">
-                  <div style="font-weight: bold; font-size: 1.1em;">Slot <%= slot.slot_number %></div>
-                  <div style="font-size: 0.8em; color: #555;"><%= slot.type %></div>
-                  <div style="font-size: 0.8em; text-transform: uppercase; margin-top: 5px;"><%= status %></div>
+                  <div class="slot-id"><%= displayNum %></div>
+                  
+                  <div style="font-size: 0.9em; font-weight:600;"><%= slot.type %></div>
+                  <div style="font-size: 0.8em; text-transform: uppercase; margin-bottom:10px;"><%= status %></div>
+                  
                   <% if (status === 'available') { %>
-                    <form method="GET" action="/reserve-parking" style="margin-top: 5px;">
+                    <form method="GET" action="/reserve-parking" style="margin:0;">
                       <input type="hidden" name="slotId" value="<%= slot.id %>">
-                      <button type="submit" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8em; margin:0;">Reserve</button>
+                      <button type="submit" class="btn btn-primary" style="width:100%; padding: 5px; font-size: 0.9em; margin:0;">Reserve</button>
                     </form>
                   <% } %>
                 </div>

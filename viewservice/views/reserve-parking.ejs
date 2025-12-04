@@ -20,13 +20,15 @@
       <form action="/postReserve" method="POST">
         <div class="form-group">
           <label for="slotId">Parking Slot</label>
-          <select id="slotId" name="slotId" required>
-            <option value="">Choose a slot...</option>
+          <select id="slotId" name="slotId" required style="font-size: 1.1em; padding: 12px;">
+            <option value="">-- Select a Parking Slot --</option>
             <% if (parkingSlots && parkingSlots.length) { %>
-              <% parkingSlots.forEach(function(slot) { %>
+              <% parkingSlots.forEach(function(slot) { 
+                 const displayNum = slot.slot_number || slot.number || ('Slot ' + slot.id);
+              %>
                 <option value="<%= slot.id %>" data-type="<%= slot.type %>" 
                   <%= (String(slot.id) === String(selectedSlotId)) ? 'selected' : '' %>>
-                  <%= slot.slot_number %> - Floor <%= slot.floor %> (<%= slot.type %>)
+                  [ <%= displayNum %> ] Floor <%= slot.floor %> — <%= slot.type %>
                 </option>
               <% }); %>
             <% } %>
@@ -51,7 +53,7 @@
           </div>
           <div class="form-group" style="flex: 1;">
             <label>Vehicle Type</label>
-            <input id="vehicleType" name="vehicleType" type="text" value="<%= initialVehicleType || '' %>" readonly required>
+            <input id="vehicleType" name="vehicleType" type="text" value="<%= initialVehicleType || '' %>" readonly required style="background: #e9ecef;">
           </div>
         </div>
 
