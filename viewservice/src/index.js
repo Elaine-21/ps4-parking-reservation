@@ -44,7 +44,7 @@ app.get('/logout', authController.logout);
 // Protected routes
 app.get('/dashboard', authMiddleware.requireAuth, dashboardController.getDashboard);
 app.get('/view-parking', authMiddleware.requireAuth, viewParkingController.getParkingSlots);
-app.get('/reserve-parking/:slotId', authMiddleware.requireAuth, reserveParkingController.getReservation);
+app.get('/reserve-parking', authMiddleware.requireAuth, reserveParkingController.getReservation);
 app.post('/postReserve', authMiddleware.requireAuth, reserveParkingController.postReserve);
 
 // Error handling middleware

@@ -4,8 +4,8 @@ const { Pool } = require('pg');
 const path = require('path');
 
 // const PROTO_PATH = '/app/proto/reservation.proto';
-const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
-
+const PROTO_PATH = path.join(__dirname, '../proto/reservation.proto');
+// const PROTO_PATH = '/app/proto/reservation.proto';
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
@@ -38,7 +38,7 @@ function mapReservationRow(row) {
 
 // Simple CreateReservation implementation
 async function CreateReservation(call, callback) {
-  const { user_id, parking_id, plate_number, date, start_time, end_time } =
+  const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } =
     call.request;
 
   try {
@@ -46,7 +46,7 @@ async function CreateReservation(call, callback) {
       INSERT INTO reservations
         (user_id, parking_id, vehicle_plate, vehicle_type, date, start_time, end_time, status)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7, 'active')
+        ($1, $2, $3, $4, $5, $6, $7, 'Active')
       RETURNING *
     `;
 

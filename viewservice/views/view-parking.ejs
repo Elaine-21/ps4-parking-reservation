@@ -41,7 +41,8 @@
                 <div style="font-size:0.85em; margin-top:6px;"><%= slot.status || 'unknown' %></div>
 
                 <!-- optional action button per slot -->
-                <form method="GET" action="/reserve-parking/<%= slot.id %>">
+                <form method="GET" action="/reserve-parking">
+                  <input type="hidden" name="slotId" value="<%= slot.id %>">
                   <button type="submit">Reserve</button>
                 </form>
               </div>

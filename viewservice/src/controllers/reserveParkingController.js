@@ -4,7 +4,7 @@ const viewParkingController = {
     getReservation:async (req, res) => {
         try {
             const user = req.user;
-            const selectedSlotId = req.params.slotId;
+            const selectedSlotId = req.query.slotId || null;
 
         res.render('reserve-parking', {
             title: 'Reservation',
@@ -27,6 +27,7 @@ const viewParkingController = {
         const {
             slotId,
             plateNumber,
+            vehicleType,
             date,
             startTime,
             endTime
@@ -37,7 +38,7 @@ const viewParkingController = {
             user_id: String(user.id),
             parking_id: String(slotId),
             plate_number: plateNumber,
-            vehicle_type: 'car',
+            vehicle_type: vehicleType,
             date,
             start_time: startTime,
             end_time: endTime
