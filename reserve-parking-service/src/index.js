@@ -3,8 +3,8 @@ const protoLoader = require('@grpc/proto-loader');
 const { Pool } = require('pg');
 const path = require('path');
 
-// const PROTO_PATH = '/app/proto/reservation.proto';
-const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
+const PROTO_PATH = '/app/proto/reservation.proto';
+//const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
 
 
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
