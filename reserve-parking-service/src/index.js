@@ -38,8 +38,9 @@ function mapReservationRow(row) {
 
 // Simple CreateReservation implementation
 async function CreateReservation(call, callback) {
-  const { user_id, parking_id, plate_number, date, start_time, end_time } =
-    call.request;
+  // const { user_id, parking_id, plate_number, date, start_time, end_time } =
+  //   call.request;
+  const { user_id, parking_id, plate_number, vehicle_type, date, start_time, end_time } = call.request;
 
   try {
     const insert = `
