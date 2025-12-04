@@ -2,48 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title><%= title %></title>
+  <title>Report Violation</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <header>
-    <h1>Report Parking Violation</h1>
-    <p><a href="/dashboard">← Back to Dashboard</a></p>
-  </header>
+  <div class="container" style="max-width: 600px;">
+    <div class="card">
+      <header>
+        <h2 style="color: var(--danger);">Report Violation</h2>
+        <a href="/dashboard">Cancel</a>
+      </header>
 
-  <main>
-    <% if (locals.error) { %> <div style="color:red; margin-bottom:10px;"><%= error %></div> <% } %>
-    <% if (locals.success) { %> <div style="color:green; margin-bottom:10px;"><%= success %></div> <% } %>
+      <% if (locals.error) { %> <div class="alert alert-error"><%= error %></div> <% } %>
+      <% if (locals.success) { %> <div class="alert alert-success"><%= success %></div> <% } %>
 
-    <form action="/violation/upload" method="POST">
-      <div>
-        <label>Patron (User ID)</label>
-        <input type="text" name="patronId" required placeholder="e.g. 2">
-      </div>
-      <div>
-        <label>Vehicle Plate</label>
-        <input type="text" name="plateNumber" required placeholder="ABC-123">
-      </div>
-      <div>
-        <label>Violation Type</label>
-        <select name="violationType">
-          <option value="idling">Idling</option>
-          <option value="speeding">Speeding</option>
-          <option value="honking">Honking</option>
-          <option value="exhaust pipe">Exhaust Pipe</option>
-          <option value="wrong parking">Wrong Parking</option>
-        </select>
-      </div>
-      <div>
-        <label>Fine Amount</label>
-        <input type="number" name="amount" value="500">
-      </div>
-      <div>
-        <label>Location</label>
-        <input type="text" name="location" placeholder="e.g. Floor 2 Section A">
-      </div>
-      <button type="submit" style="margin-top:10px;">Upload Violation</button>
-    </form>
-  </main>
+      <form action="/violation/upload" method="POST">
+        <div class="form-group">
+          <label>Offender (User ID)</label>
+          <input type="text" name="patronId" required placeholder="e.g. 2">
+        </div>
+        
+        <div class="form-group">
+          <label>Vehicle Plate Number</label>
+          <input type="text" name="plateNumber" required placeholder="ABC-123">
+        </div>
+        
+        <div class="form-group">
+          <label>Violation Type</label>
+          <select name="violationType">
+            <option value="idling">Idling Engine</option>
+            <option value="speeding">Speeding</option>
+            <option value="honking">Excessive Honking</option>
+            <option value="wrong_parking">Wrong Parking / Double Parking</option>
+            <option value="unauthorized">Unauthorized Access</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Fine Amount (PHP)</label>
+          <input type="number" name="amount" value="500">
+        </div>
+        
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" name="location" placeholder="e.g. Floor 2 Slot 15">
+        </div>
+        
+        <button type="submit" class="btn btn-danger" style="width:100%; margin-top:10px;">Submit Report</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
