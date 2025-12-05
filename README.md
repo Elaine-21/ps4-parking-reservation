@@ -39,19 +39,59 @@ The system utilizes a **Microservices Architecture** where the frontend communic
 
 - Docker Desktop installed and running.
 
+### 0: Clean Start
+
+Stop any running containers and remove volumes to ensure a fresh environment:
+
+```bash
+docker compose down -v
+```
+
 ### 1. Build and Start
 
 Open your terminal in the root directory and run:
 
 ```bash
-docker compose up --build
+# Start DB and Redis
+docker compose up -d db redis
+
+# Wait for database to initialize
+sleep 5
+
+# Build and start all services
+docker compose up --build -d
 ```
 
-### 2. Access the Application
+### 2. Verify Database (Pre-Check)
+
+Check if the database is running and tables were created (but users might be missing):
+
+```bash
+# Check existing tables
+docker exec ps4-parking-reservation-db-1 psql -U admin -d parkingdb -c "\dt"
+```
+
+### 3: Populate Database (CRITICAL)
+
+Run the initialization script to create the required user accounts. Do not skip this step.
+
+```bash
+node scripts/init-db.js
+```
+
+### 4: Verify Installation
+
+Confirm that the users (Student, Faculty, Admin) have been created successfully:
+
+```bash
+docker exec ps4-parking-reservation-db-1 psql -U admin -d parkingdb -c "SELECT id, username, role FROM users;"
+```
+
+### 5. Access the Application
 
 Open your browser and navigate to: http://localhost:3000
 
-### 3. Login Credentials
+### 6. Login Credentials
 
 The database is initialized with these sample users for testing:
 
