@@ -103,6 +103,7 @@ sleep 10
 4.  **Action:** START the parking service.
     ```bash
     docker compose start parking-service
+    sleep 10
     ```
 
 ### Test Scenario 2: Violation Node Failure
@@ -123,6 +124,7 @@ sleep 10
 4.  **Action:** START the violation service.
     ```bash
     docker compose start violation-service
+    sleep 10
     ```
 
 ### Test Scenario 3: Reservation Node Failure
@@ -143,6 +145,7 @@ sleep 10
 4.  **Action:** START the reservation service.
     ```bash
     docker compose start reservation-service
+    sleep 10
     ```
 
 ### Test Scenario 4: Auth Node Failure (Critical System)
