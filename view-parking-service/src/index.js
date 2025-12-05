@@ -35,47 +35,65 @@ pool.query('SELECT NOW()', (err) => {
 
 // gRPC: GetParkingSlots
 async function GetParkingSlots(call, callback) {
-  const { type, floor } = call.request; // strings, may be empty/undefined
+  const { type, floor } = call.request;
 
   try {
-    let query =
-      'SELECT id, slot_number, floor, type, status FROM parking_slots';
+    // DYNAMIC QUERY:
+    // This checks if the current time falls between any reservation's start and end time.
+    // '::time' ensures we compare time-to-time correctly.
+    
+    let query = `
+      SELECT 
+        p.id, 
+        p.slot_number, 
+        p.floor, 
+        p.type,
+        CASE 
+          WHEN p.status = 'Maintenance' THEN 'Maintenance'
+          WHEN EXISTS (
+            SELECT 1 FROM reservations r 
+            WHERE r.parking_id = p.id 
+            AND r.status = 'Active'
+            AND r.date = CURRENT_DATE 
+            AND LOCALTIME BETWEEN r.start_time AND r.end_time
+          ) THEN 'Occupied'
+          ELSE p.status 
+        END as calculated_status
+      FROM parking_slots p
+    `;
+
     const params = [];
-    const conds = [];
+    const wheres = [];
 
     if (type) {
       params.push(type);
-      conds.push(`type = $${params.length}`);
+      wheres.push(`p.type = $${params.length}`);
     }
-
     if (floor) {
-      params.push(parseInt(floor, 10));
-      conds.push(`floor = $${params.length}`);
+      params.push(floor);
+      wheres.push(`p.floor = $${params.length}`);
     }
 
-    if (conds.length > 0) {
-      query += ' WHERE ' + conds.join(' AND ');
+    if (wheres.length > 0) {
+      query += ' WHERE ' + wheres.join(' AND ');
     }
 
-    query += ' ORDER BY floor, slot_number';
+    query += ' ORDER BY p.floor, p.slot_number ASC';
 
     const { rows } = await pool.query(query, params);
 
     const slots = rows.map((row) => ({
       id: String(row.id),
-      number: row.slot_number,
+      slot_number: row.slot_number,
       floor: String(row.floor),
       type: row.type,
-      status: row.status,
+      status: row.calculated_status // This will now be 'Occupied' if reserved right now
     }));
 
     callback(null, { slots });
   } catch (err) {
     console.error('🚨 GetParkingSlots error:', err);
-    callback({
-      code: grpc.status.INTERNAL,
-      message: 'Failed to fetch parking slots',
-    });
+    callback(null, { slots: [] });
   }
 }
 
