@@ -20,15 +20,18 @@
       <form action="/postReserve" method="POST">
         <div class="form-group">
           <label for="slotId">Parking Slot</label>
-          <select id="slotId" name="slotId" required style="font-size: 1.1em; padding: 12px;">
-            <option value="">-- Select a Parking Slot --</option>
+          <select id="slotId" name="slotId" required style="font-size: 1.1em; padding: 10px;">
+            <option value="">-- Choose a Parking Slot --</option>
             <% if (parkingSlots && parkingSlots.length) { %>
               <% parkingSlots.forEach(function(slot) { 
-                 const displayNum = slot.slot_number || slot.number || ('Slot ' + slot.id);
+                 // Create a clean label: "A1 - Floor 1 (Car)"
+                 const label = (slot.slot_number || slot.number || 'Slot ' + slot.id) + 
+                               " — Floor " + slot.floor + 
+                               " (" + slot.type + ")";
               %>
                 <option value="<%= slot.id %>" data-type="<%= slot.type %>" 
                   <%= (String(slot.id) === String(selectedSlotId)) ? 'selected' : '' %>>
-                  [ <%= displayNum %> ] Floor <%= slot.floor %> — <%= slot.type %>
+                  <%= label %>
                 </option>
               <% }); %>
             <% } %>

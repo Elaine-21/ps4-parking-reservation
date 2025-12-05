@@ -28,11 +28,11 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 2rem;">
         <div>
           <h3>📅 Today</h3>
-          <p><%= currentDate || new Date().toLocaleDateString() %></p>
+          <p id="current-date"><%= currentDate || new Date().toLocaleDateString() %></p>
         </div>
         <div>
           <h3>🕒 Time</h3>
-          <p><%= currentTime || new Date().toLocaleTimeString() %></p>
+          <p id="realtime-clock" style="font-weight: bold; font-size: 1.2em; color: var(--primary);">Loading...</p>
         </div>
       </div>
 
@@ -54,5 +54,34 @@
       </div>
     </div>
   </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          second: '2-digit' 
+        });
+        
+        const clockElement = document.getElementById('realtime-clock');
+        const dateElement = document.getElementById('current-date');
+
+        if (clockElement) {
+          clockElement.textContent = timeString;
+        } else {
+          console.error("Could not find element with id 'realtime-clock'");
+        }
+
+        if (dateElement) {
+          dateElement.textContent = now.toLocaleDateString();
+        }
+      }
+
+      updateTime();
+      setInterval(updateTime, 1000);
+    });
+  </script>
 </body>
 </html>

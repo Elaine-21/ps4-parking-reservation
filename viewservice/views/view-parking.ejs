@@ -5,12 +5,41 @@
   <title>Parking Map</title>
   <link rel="stylesheet" href="/static/style.css" />
   <style>
-    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-    .slot { padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: space-between; }
-    .slot.available { background: #dcfce7; border-color: #86efac; }
-    .slot.occupied { background: #fee2e2; border-color: #fca5a5; opacity: 0.8; }
-    .slot.reserved { background: #fef9c3; border-color: #fde047; }
-    .slot-id { font-size: 1.8em; font-weight: 800; margin-bottom: 5px; color: #333; }
+    .slots-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+      gap: 15px; 
+    }
+    .slot { 
+      padding: 15px; 
+      border-radius: 8px; 
+      text-align: center; 
+      border: 1px solid #ddd; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center;
+      min-height: 120px;
+    }
+
+    .slot-number {
+      font-size: 2em;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    /* STATUS COLORS */
+    /* Available = Green */
+    .slot.available { background: #dcfce7; border-color: #86efac; color: #14532d; }
+    /* Occupied/Reserved = Red */
+    .slot.occupied, .slot.reserved { 
+      background: #fee2e2; 
+      border-color: #fca5a5; 
+      color: #7f1d1d; 
+    }
+    
+    /* Maintenance = Grey */
+    .slot.maintenance { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
   </style>
 </head>
 <body>
@@ -30,19 +59,19 @@
             <div class="slots-grid">
               <% groupedByFloor[floorKey].forEach(function(slot) { 
                  const status = (slot.status || '').toLowerCase(); 
-                 // Fallback to ensure we see SOMETHING if slot_number is missing
-                 const displayNum = slot.slot_number || slot.number || slot.id;
+                 // Ensure we have a label even if DB is empty
+                 const label = slot.slot_number || slot.number || ('Slot ' + slot.id);
               %>
                 <div class="slot <%= status %>">
-                  <div class="slot-id"><%= displayNum %></div>
+                  <span class="slot-number"><%= label %></span>
                   
-                  <div style="font-size: 0.9em; font-weight:600;"><%= slot.type %></div>
-                  <div style="font-size: 0.8em; text-transform: uppercase; margin-bottom:10px;"><%= status %></div>
-                  
+                  <span style="font-size: 0.85em; font-weight: 600;"><%= slot.type %></span>
+                  <span style="font-size: 0.75em; text-transform: uppercase;"><%= status %></span>
+
                   <% if (status === 'available') { %>
-                    <form method="GET" action="/reserve-parking" style="margin:0;">
+                    <form method="GET" action="/reserve-parking" style="margin-top: 10px;">
                       <input type="hidden" name="slotId" value="<%= slot.id %>">
-                      <button type="submit" class="btn btn-primary" style="width:100%; padding: 5px; font-size: 0.9em; margin:0;">Reserve</button>
+                      <button type="submit" class="btn btn-primary" style="width:100%; padding: 5px; font-size: 0.8em; margin:0;">Reserve</button>
                     </form>
                   <% } %>
                 </div>
