@@ -140,7 +140,7 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"Report Violation"**.
     - **Result:** The violation form loads and submits successfully.
-4.  **Action:** START the parking service.
+4.  **Action:** RESTART the parking service.
     ```bash
     docker compose start parking-service
     sleep 10
@@ -161,7 +161,7 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"Reserve a Slot"**.
     - **Result:** The reservation form loads, slots are visible, and you can successfully book a slot.
-4.  **Action:** START the violation service.
+4.  **Action:** RESTART the violation service.
     ```bash
     docker compose start violation-service
     sleep 10
@@ -182,7 +182,7 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"View Parking Map"**.
     - **Result:** The map still loads and shows slot statuses (Available/Occupied).
-4.  **Action:** START the reservation service.
+4.  **Action:** RESTART the reservation service.
     ```bash
     docker compose start reservation-service
     sleep 10
@@ -199,6 +199,11 @@ sleep 10
 2.  **Verify Impact:**
     - Try to refresh the **Dashboard** or navigate to any protected route.
     - **Result:** You are immediately redirected to the **Login** page or shown an error. Access is denied because the token cannot be validated.
+3.  **Action:** RESTART the auth service.
+    ```bash
+    docker compose start auth-service
+    sleep 10
+    ```
 
 ---
 
