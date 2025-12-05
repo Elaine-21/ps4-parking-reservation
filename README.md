@@ -100,6 +100,10 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"Report Violation"**.
     - **Result:** The violation form loads and submits successfully.
+4.  **Action:** START the parking service.
+    ```bash
+    docker compose start parking-service
+    ```
 
 ### Test Scenario 2: Violation Node Failure
 
@@ -116,6 +120,10 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"Reserve a Slot"**.
     - **Result:** The reservation form loads, slots are visible, and you can successfully book a slot.
+4.  **Action:** START the violation service.
+    ```bash
+    docker compose start violation-service
+    ```
 
 ### Test Scenario 3: Reservation Node Failure
 
@@ -132,6 +140,10 @@ sleep 10
 3.  **Verify Isolation:**
     - Go back to **Dashboard** → Click **"View Parking Map"**.
     - **Result:** The map still loads and shows slot statuses (Available/Occupied).
+4.  **Action:** START the reservation service.
+    ```bash
+    docker compose start reservation-service
+    ```
 
 ### Test Scenario 4: Auth Node Failure (Critical System)
 
