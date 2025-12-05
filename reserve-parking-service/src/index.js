@@ -193,9 +193,9 @@ function main() {
     }
   );
   process.on('SIGINT', () => {
-    console.log('\n👋 Shutting down ReservationService...');
+    console.log('\nShutting down ReservationService...');
     server.tryShutdown(() => {
-      console.log('✅ ReservationService shut down gracefully');
+      console.log('ReservationService shut down gracefully');
       process.exit(0);
     });
   });

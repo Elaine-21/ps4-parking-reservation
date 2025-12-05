@@ -87,6 +87,6 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Viewservice running on port ${PORT}`);
-  console.log(`🌐 Dashboard: http://localhost:${PORT}/dashboard`);
+  console.log(`Viewservice running on port ${PORT}`);
+  console.log(`Dashboard: http://localhost:${PORT}/dashboard`);
 });

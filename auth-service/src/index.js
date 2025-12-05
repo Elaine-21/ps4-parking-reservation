@@ -32,9 +32,9 @@ const pool = new Pool({
 // Test database connection
 pool.query('SELECT NOW()', (err) => {
   if (err) {
-    console.error('❌ Database connection failed:', err.message);
+    console.error('Database connection failed:', err.message);
   } else {
-    console.log('✅ Database connected successfully');
+    console.log('Database connected successfully');
   }
 });
 
@@ -108,7 +108,7 @@ async function Login(call, callback) {
       { expiresIn: '24h' } // Longer expiry for testing
     );
 
-    console.log(`✅ Successful login for: ${username} (${user.role})`);
+    console.log(`Successful login for: ${username} (${user.role})`);
     
     callback(null, generateUserResponse(user, token));
   } catch (err) {
@@ -143,7 +143,7 @@ async function ValidateToken(call, callback) {
 
     const user = rows[0];
     
-    console.log(`✅ Token valid for user: ${user.username}`);
+    console.log(`Token valid for user: ${user.username}`);
     
     callback(null, {
       valid: true,
@@ -276,14 +276,14 @@ function main() {
         process.exit(1);
       }
       
-      console.log(`✅ Auth gRPC server running on port ${port}`);
-      console.log('📡 Available endpoints:');
+      console.log(`Auth gRPC server running on port ${port}`);
+      console.log('Available endpoints:');
       console.log('  - Login(username, password)');
       console.log('  - ValidateToken(token)');
       console.log('  - Logout(token)');
       console.log('  - GetUserInfo(user_id)');
       console.log('  - ListUsers()');
-      console.log('\n🧪 Test credentials:');
+      console.log('\n Test credentials:');
       console.log('  - student1 / password123');
       console.log('  - faculty1 / password123');
       console.log('  - admin1 / password123');
@@ -294,9 +294,9 @@ function main() {
 
   // Graceful shutdown
   process.on('SIGINT', () => {
-    console.log('\n👋 Shutting down auth service...');
+    console.log('\n Shutting down auth service...');
     server.tryShutdown(() => {
-      console.log('✅ Auth service shut down gracefully');
+      console.log('Auth service shut down gracefully');
       process.exit(0);
     });
   });

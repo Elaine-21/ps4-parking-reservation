@@ -56,7 +56,7 @@ function main() {
   
   server.bindAsync('0.0.0.0:50055', grpc.ServerCredentials.createInsecure(), (err, port) => {
     if(err) console.error(err);
-    console.log(`✅ Violation Service running on port ${port}`);
+    console.log(`Violation Service running on port ${port}`);
     server.start();
   });
 }

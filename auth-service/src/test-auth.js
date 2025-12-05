@@ -57,7 +57,7 @@ async function testListUsers() {
 }
 
 async function runTests() {
-  console.log('🧪 Starting Auth Service Tests\n');
+  console.log('Starting Auth Service Tests\n');
   
   try {
     // Test 1: Login with student
@@ -65,7 +65,7 @@ async function runTests() {
     const loginResponse = await testLogin('admin', 'password123');
     
     if (loginResponse.success) {
-      console.log('✅ Login successful!');
+      console.log('Login successful!');
       console.log(`   Token: ${loginResponse.token.substring(0, 30)}...`);
       console.log(`   User: ${loginResponse.username} (${loginResponse.role})`);
       
@@ -74,7 +74,7 @@ async function runTests() {
       const validateResponse = await testValidateToken(loginResponse.token);
       
       if (validateResponse.valid) {
-        console.log('✅ Token is valid!');
+        console.log('Token is valid!');
         console.log(`   User ID: ${validateResponse.user_id}`);
         console.log(`   Role: ${validateResponse.role}`);
         
@@ -83,13 +83,13 @@ async function runTests() {
         const userInfo = await testGetUserInfo(validateResponse.user_id);
         
         if (userInfo.success) {
-          console.log('✅ User info retrieved!');
+          console.log('User info retrieved!');
           console.log(`   Name: ${userInfo.user.first_name} ${userInfo.user.last_name}`);
         } else {
-          console.log('❌ GetUserInfo failed:', userInfo.message);
+          console.log('GetUserInfo failed:', userInfo.message);
         }
       } else {
-        console.log('❌ Token validation failed:', validateResponse.message);
+        console.log('Token validation failed:', validateResponse.message);
       }
       
       // Test 4: List users (admin function)
@@ -97,7 +97,7 @@ async function runTests() {
       const usersList = await testListUsers();
       
       if (usersList.success) {
-        console.log(`✅ Retrieved ${usersList.count} users`);
+        console.log(`Retrieved ${usersList.count} users`);
         usersList.users.forEach(user => {
           console.log(`   - ${user.username} (${user.role})`);
         });

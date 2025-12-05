@@ -66,7 +66,7 @@ function main() {
   // Note: Port 50054
   server.bindAsync('0.0.0.0:50054', grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err) return console.error(err);
-    console.log(`✅ Reservation VIEW Service running on port ${port}`);
+    console.log(`Reservation VIEW Service running on port ${port}`);
     server.start();
   });
 }
