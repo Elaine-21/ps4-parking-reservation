@@ -3,45 +3,30 @@ const protoLoader = require('@grpc/proto-loader');
 const { Pool } = require('pg');
 const path = require('path');
 
-// Proto path – we will mount ./common/proto to /app/proto in docker-compose
+// 1. Load the Proto file
 const PROTO_PATH = path.join(__dirname, '../proto/parking.proto');
-// const PROTO_PATH = '/app/proto/auth.proto';
-
 const packageDef = protoLoader.loadSync(PROTO_PATH, {
   keepCase: true,
   longs: String,
   enums: String,
   defaults: true,
-  oneofs: true,
+  oneofs: true
 });
-
 const parkingProto = grpc.loadPackageDefinition(packageDef).parking;
 
-// Postgres pool
+// 2. Connect to Database
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    'postgresql://admin:parking@localhost:5432/parkingdb',
+  connectionString: process.env.DATABASE_URL || 'postgresql://admin:parking@db:5432/parkingdb',
 });
 
-// Quick connection test
-pool.query('SELECT NOW()', (err) => {
-  if (err) {
-    console.error('❌ ParkingService DB connection failed:', err.message);
-  } else {
-    console.log('✅ ParkingService DB connected');
-  }
-});
-
-// gRPC: GetParkingSlots
+// 3. gRPC Method: GetParkingSlots
 async function GetParkingSlots(call, callback) {
   const { type, floor } = call.request;
 
   try {
-    // DYNAMIC QUERY:
-    // This checks if the current time falls between any reservation's start and end time.
-    // '::time' ensures we compare time-to-time correctly.
-    
+    // SMART QUERY:
+    // It checks if the current time falls inside an active reservation window.
+    // If yes, it overrides the status to 'Occupied'.
     let query = `
       SELECT 
         p.id, 
@@ -65,6 +50,7 @@ async function GetParkingSlots(call, callback) {
     const params = [];
     const wheres = [];
 
+    // Add filters if provided
     if (type) {
       params.push(type);
       wheres.push(`p.type = $${params.length}`);
@@ -78,85 +64,56 @@ async function GetParkingSlots(call, callback) {
       query += ' WHERE ' + wheres.join(' AND ');
     }
 
+    // Sort nicely by floor then slot
     query += ' ORDER BY p.floor, p.slot_number ASC';
 
     const { rows } = await pool.query(query, params);
 
+    // Map DB results to Proto message format
     const slots = rows.map((row) => ({
       id: String(row.id),
-      slot_number: row.slot_number,
+      slot_number: row.slot_number || ('Slot ' + row.id), // Ensure we always have a label
       floor: String(row.floor),
       type: row.type,
-      status: row.calculated_status // This will now be 'Occupied' if reserved right now
+      status: row.calculated_status // Uses the real-time status
     }));
 
     callback(null, { slots });
   } catch (err) {
     console.error('🚨 GetParkingSlots error:', err);
+    // Return empty list instead of crashing
     callback(null, { slots: [] });
   }
 }
 
-// gRPC: UpdateSlotStatus (for later)
+// 4. gRPC Method: UpdateSlotStatus (Admin Tool)
 async function UpdateSlotStatus(call, callback) {
   const { slotId, status } = call.request;
-
   try {
-    const { rowCount } = await pool.query(
-      'UPDATE parking_slots SET status = $1 WHERE id = $2',
-      [status, slotId]
-    );
-
-    if (rowCount === 0) {
-      return callback(null, {
-        success: false,
-        message: 'Slot not found',
-      });
-    }
-
-    callback(null, {
-      success: true,
-      message: 'Slot status updated',
-    });
+    await pool.query('UPDATE parking_slots SET status = $1 WHERE id = $2', [status, slotId]);
+    callback(null, { success: true, message: 'Status updated' });
   } catch (err) {
-    console.error('🚨 UpdateSlotStatus error:', err);
-    callback(null, {
-      success: false,
-      message: 'Failed to update slot',
-    });
+    console.error('Update error:', err);
+    callback(null, { success: false, message: err.message });
   }
 }
 
+// 5. Start the Server
 function main() {
   const server = new grpc.Server();
-
   server.addService(parkingProto.ParkingService.service, {
     GetParkingSlots,
-    UpdateSlotStatus,
+    UpdateSlotStatus
   });
-
-  const PORT = process.env.GRPC_PORT || '0.0.0.0:50052';
-
-  server.bindAsync(
-    PORT,
-    grpc.ServerCredentials.createInsecure(),
-    (err, port) => {
-      if (err) {
-        console.error('❌ Failed to start Parking gRPC server:', err);
-        process.exit(1);
-      }
-
-      console.log(`✅ Parking gRPC server running on port ${port}`);
-      server.start();
+  
+  // Bind to port 50052 as defined in docker-compose
+  server.bindAsync('0.0.0.0:50052', grpc.ServerCredentials.createInsecure(), (err, port) => {
+    if (err) {
+      console.error('❌ Failed to bind Parking Service:', err);
+      return;
     }
-  );
-
-  process.on('SIGINT', () => {
-    console.log('\n👋 Shutting down ParkingService...');
-    server.tryShutdown(() => {
-      console.log('✅ ParkingService shut down gracefully');
-      process.exit(0);
-    });
+    console.log(`🅿️ Parking Service running on port ${port}`);
+    server.start();
   });
 }
 

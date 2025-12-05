@@ -1,10 +1,27 @@
 const grpcClient = require('../../common/grpc-client');
 
 module.exports = {
-  getUpload: (req, res) => {
-    res.render('upload-violation', { title: 'Report Violation', user: req.user });
+  // GET: Show the form
+  getUpload: async (req, res) => {
+    try {
+      const allSlots = await grpcClient.getParkingSlots(null, null);
+      res.render('upload-violation', { 
+        title: 'Report Violation', 
+        user: req.user,
+        parkingSlots: allSlots
+      });
+    } catch (err) {
+      console.error("Error loading violation page:", err);
+      res.render('upload-violation', { 
+        title: 'Report Violation', 
+        user: req.user,
+        parkingSlots: [],
+        error: "Could not load parking slots"
+      });
+    }
   },
 
+  // POST: Handle the submission
   postUpload: async (req, res) => {
     const { patronId, plateNumber, violationType, amount, location } = req.body;
     
@@ -22,22 +39,32 @@ module.exports = {
     try {
         const result = await grpcClient.uploadViolation(payload);
         if (result.success) {
-            // Show success on dashboard or reload page
-            res.render('upload-violation', { 
-              title: 'Report Violation', 
-              user: req.user, 
-              success: `Violation recorded! ID: ${result.violation.id}` 
+            // FIX IS HERE: We MUST pass currentDate and currentTime to prevent dashboard crash
+            res.render('dashboard', { 
+              title: 'Dashboard',
+              user: req.user,
+              success: `Violation Report #${result.violation.id} submitted successfully.`,
+              currentDate: new Date().toLocaleDateString(), // <--- ADDED
+              currentTime: new Date().toLocaleTimeString()  // <--- ADDED
             });
         } else {
+            const allSlots = await grpcClient.getParkingSlots(null, null);
             res.render('upload-violation', { 
               title: 'Report Violation', 
               user: req.user, 
+              parkingSlots: allSlots,
               error: 'Failed to upload: ' + result.message 
             });
         }
     } catch (err) {
-        console.error(err);
-        res.render('upload-violation', { title: 'Report Violation', user: req.user, error: 'System error' });
+        console.error("Violation Upload Error:", err);
+        const allSlots = await grpcClient.getParkingSlots(null, null);
+        res.render('upload-violation', { 
+          title: 'Report Violation', 
+          user: req.user, 
+          parkingSlots: allSlots,
+          error: 'System error: Unable to contact Violation Service.' 
+        });
     }
   }
 };

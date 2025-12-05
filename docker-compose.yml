@@ -88,6 +88,8 @@ services:
       DATABASE_URL: postgresql://admin:parking@db:5432/parkingdb
     depends_on:
       - db
+    volumes:
+      - ./common/proto:/app/proto    
 
   # main web frontend (MVC / Express) that calls all gRPC services
   viewservice:

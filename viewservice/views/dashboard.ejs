@@ -28,11 +28,13 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 2rem;">
         <div>
           <h3>📅 Today</h3>
-          <p id="current-date"><%= currentDate || new Date().toLocaleDateString() %></p>
+          <p id="current-date"><%= locals.currentDate ? currentDate : new Date().toLocaleDateString() %></p>
         </div>
         <div>
           <h3>🕒 Time</h3>
-          <p id="realtime-clock" style="font-weight: bold; font-size: 1.2em; color: var(--primary);">Loading...</p>
+          <p id="realtime-clock" style="font-weight: bold; font-size: 1.2em; color: var(--primary);">
+             <%= locals.currentTime ? currentTime : 'Loading...' %>
+          </p>
         </div>
       </div>
 

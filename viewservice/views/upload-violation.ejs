@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Report Violation</title>
+  <title><%= title %></title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
@@ -17,6 +17,26 @@
       <% if (locals.success) { %> <div class="alert alert-success"><%= success %></div> <% } %>
 
       <form action="/violation/upload" method="POST">
+        
+        <div class="form-group">
+          <label>Location (Slot)</label>
+          <select name="location" required style="font-size:1.1em; padding:10px;">
+            <option value="">-- Select Slot where Violation Occurred --</option>
+            <% if (locals.parkingSlots && parkingSlots.length > 0) { %>
+              <% parkingSlots.forEach(function(slot) { 
+                 const label = (slot.slot_number || 'Slot ' + slot.id);
+                 const val = "Floor " + slot.floor + " - " + label;
+              %>
+                <option value="<%= val %>">
+                  <%= label %> (Floor <%= slot.floor %>) - <%= slot.type %>
+                </option>
+              <% }); %>
+            <% } else { %>
+              <option value="Unknown Location">No slots loaded</option>
+            <% } %>
+          </select>
+        </div>
+
         <div class="form-group">
           <label>Offender (User ID)</label>
           <input type="text" name="patronId" required placeholder="e.g. 2">
@@ -41,11 +61,6 @@
         <div class="form-group">
           <label>Fine Amount (PHP)</label>
           <input type="number" name="amount" value="500">
-        </div>
-        
-        <div class="form-group">
-          <label>Location</label>
-          <input type="text" name="location" placeholder="e.g. Floor 2 Slot 15">
         </div>
         
         <button type="submit" class="btn btn-danger" style="width:100%; margin-top:10px;">Submit Report</button>
